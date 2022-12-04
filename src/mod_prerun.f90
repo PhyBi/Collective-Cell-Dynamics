@@ -28,6 +28,9 @@ module prerun
             'System size as read in from checkpoint: '//cpt_fname// &
                 ' does not match that given in parameter file: '//params_fname
 
+        if((rc_adh .gt. box/2) .or. (rc_rep .gt. box/2)) error stop &
+            'Minimum image convention is at stake. Make box bigger than 2 x interaction-cutoff.'
+
         append_flag_present = cmd_line_flag('-a') .or. cmd_line_flag('--append')
         finish_prev_run = (pending_steps /= 0) .and. (params_hash == sha1(params_fname))
         

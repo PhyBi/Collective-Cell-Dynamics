@@ -159,7 +159,8 @@ module files
                 write(status_fd,*)
             end if
             flush(status_fd)
-            ! Flush doesn't guarantee data would be written to disk, but warrants it would be available to other processes
+            ! Flush doesn't guarantee data would be written to disk, 
+            ! but warrants it would be available to other processes
             pending_dumps=0
         else
             pending_dumps = pending_dumps+1
