@@ -88,7 +88,6 @@ module files
                 wait(traj_fd)
                 flush(traj_fd)
 
-                call random_seed(get = prng_seeds)
 
                 ! Dumping to .cpt.tmp instead of *.cpt for now
                 open(newunit=cpt_fd,file='.cpt.tmp', access='sequential', form='unformatted', &

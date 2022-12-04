@@ -8,7 +8,7 @@ module grid_linked_list
 	   integer, protected:: mapsiz
 	   integer, dimension(:), allocatable:: map
 	   integer, dimension(:), allocatable:: headcell
-       integer, dimension(:,:), allocatable:: headbead,listcell,listbead,icell_memory
+       integer, dimension(:,:), allocatable:: headbead,listcell,listbead
        private :: grid_index
        
     contains
@@ -31,8 +31,7 @@ module grid_linked_list
     ncell=w*w
     mapsiz=4*ncell
     
-    allocate(map(mapsiz), headcell(ncell), headbead(ncell,m),listcell(ncell,m),listbead(m,n),icell_memory(m,n), &
-        stat=alloc_stat)
+    allocate(map(mapsiz), headcell(ncell), headbead(ncell,m),listcell(ncell,m),listbead(m,n), stat=alloc_stat)
         
      if(alloc_stat /= 0) error stop 'Problem while allocating grid_linked_list'
     
@@ -81,7 +80,6 @@ module grid_linked_list
 
 			icell = 1 + int(x3(l,i) * celli) + int(y3(l,i) * celli) * w  !! determining the cell index for a particular bead
 
-			icell_memory(l,i) = icell
 			
 			
 			listcell(icell,l)     = headcell(icell)     !! The next lower ring index in that cell(icell)

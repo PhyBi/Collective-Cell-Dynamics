@@ -54,5 +54,7 @@ module prerun
         if(append_flag_present) call log_this('Extending the existing trajectory @ '//traj_fname)
 
         !$ call log_this('Using '//int_to_char(int(omp_get_max_threads(), kind=kind(jf)))//' OpenMP threads')
+        
+        do_status_dump = .not. (cmd_line_flag('-n') .or. cmd_line_flag('--no-status-dump'))
     end subroutine prerun_setup
 end module prerun
