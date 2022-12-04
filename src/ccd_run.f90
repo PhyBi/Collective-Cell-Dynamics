@@ -26,7 +26,7 @@ program ccd_run
 
     call timestamp()
 
-	!$omp parallel default(shared) private(j1)
+	!$omp parallel default(shared) private(j1) firstprivate(timepoint)
     timeseries: do j1=1,jf
 
     !$omp single
@@ -55,24 +55,11 @@ program ccd_run
         for_pv: if(mod(j1,status_dump_int).eq.0) then
             call status_dump()
         end if for_pv
-
-    !$omp section
-             CALL gasdev(noise,mean,var) ! Updates prng_seeds as side-effect
-
-    ! Note that when one thread updates prng_seeds another is writing prng_seeds at cpt_dump.
-    ! But this should not be of concern as multithread runs are not exactly reproducible anyway
-    ! because of race conditions between threads. Order of computations may not be the same
-    ! between computations, and we already know a+b /= b+a. Also gfortran implements separate
-    ! random_number seeds for different threads.
-    
-    ! The point of saving prng_seeds is only to reproduce serial runs
     !$omp end sections
     
 	call move_noise() ! Update state
 
-    !$omp single
 	timepoint = timepoint + dt ! Update timepoint
-    !$omp end single
 
     end do timeseries
     !$omp end parallel

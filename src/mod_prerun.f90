@@ -7,7 +7,7 @@ module prerun
         use state_vars
         use parameters
         use files
-        use omp_lib, only: omp_get_max_threads
+        !$ use omp_lib, only: omp_get_max_threads
         
         integer, intent(out) :: jf
         integer :: pending_steps
