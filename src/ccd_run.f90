@@ -26,7 +26,7 @@ program ccd_run
 
     call timestamp()
 
-	!$omp parallel default(shared) private(j1) firstprivate(timepoint)
+	!$omp parallel default(shared) private(j1)
     timeseries: do j1=1,jf
 
     !$omp single
@@ -59,7 +59,9 @@ program ccd_run
     
 	call move_noise() ! Update state
 
-	timepoint = timepoint + dt ! Update timepoint
+	!$omp single
+    timepoint = timepoint + dt ! Update timepoint
+    !$omp end single
 
     end do timeseries
     !$omp end parallel

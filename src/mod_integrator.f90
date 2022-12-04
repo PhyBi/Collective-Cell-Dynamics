@@ -38,7 +38,7 @@ contains
             my(l,i) = (factor1*my(l,i) + theta_y)/factor2
         end do
       end do
-      !$omp end do
+      !$omp end do nowait
 
       return
       end subroutine move_noise
