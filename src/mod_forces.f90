@@ -160,7 +160,7 @@ contains
 					jcell0 = 4*(icell-1)     
 					
 					do nabor=1,4
-						jcell = map(jcell0 + nabor)  !!
+						jcell = gridmap(jcell0 + nabor)  !!
 
 	!! Loop Over All Rings & Beads Of The Neighbouring Cells!! 
 

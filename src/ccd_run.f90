@@ -21,7 +21,7 @@ program ccd_run
     call prerun_setup(jf)
     
     call log_this('Setting up neighbor list grids')
-	call maps
+	call gridmaps
    
     call log_this('Starting the main run')
 

@@ -5,8 +5,8 @@ module grid_linked_list
 
 	   integer, protected:: w, ncell
        double precision, protected :: celli
-	   integer, protected:: mapsiz
-	   integer, dimension(:), allocatable:: map
+	   integer, protected:: gridmapsiz
+	   integer, dimension(:), allocatable:: gridmap
 	   integer, dimension(:), allocatable:: headcell
        integer, dimension(:,:), allocatable:: headbead,listcell,listbead
        private :: grid_index
@@ -21,17 +21,17 @@ module grid_linked_list
     end function grid_index
 
 	!!*** Subroutine to set up the cells and to make the list of neighbouring cells through PBC ***!!
-	subroutine maps()
-	integer:: ix,iy,imap,alloc_stat
+	subroutine gridmaps()
+	integer:: ix,iy,igridmap,alloc_stat
 
     w=int(box/rcut)
     !TODO: rcut should be derived from number of beads per cell and l0
 	celli = dble(w/box) !! celli is the inverse of cell length
 	if((1.d0/celli).lt.rcut) error stop 'Grid size too small compared to interaction cut-off'
     ncell=w*w
-    mapsiz=4*ncell
+    gridmapsiz=4*ncell
     
-    allocate(map(mapsiz), headcell(ncell), headbead(ncell,m),listcell(ncell,m),listbead(m,n), stat=alloc_stat)
+    allocate(gridmap(gridmapsiz), headcell(ncell), headbead(ncell,m),listcell(ncell,m),listbead(m,n), stat=alloc_stat)
         
      if(alloc_stat /= 0) error stop 'Problem while allocating grid_linked_list'
     
@@ -41,15 +41,15 @@ module grid_linked_list
         	do ix=1,w
 
 			
-			imap = (grid_index(ix,iy) - 1) * 4
+			igridmap = (grid_index(ix,iy) - 1) * 4
 		
-			map(imap+1) = grid_index(ix+1,iy)
-			map(imap+2) = grid_index(ix+1,iy+1)
-			map(imap+3) = grid_index(ix,iy+1)
-			map(imap+4) = grid_index(ix-1,iy+1)
+			gridmap(igridmap+1) = grid_index(ix+1,iy)
+			gridmap(igridmap+2) = grid_index(ix+1,iy+1)
+			gridmap(igridmap+3) = grid_index(ix,iy+1)
+			gridmap(igridmap+4) = grid_index(ix-1,iy+1)
 		end do
 	end do
-	end subroutine maps
+	end subroutine gridmaps
 
 
 	!!*** Subroutine to make linked lists & head of chain arrays ***!!
