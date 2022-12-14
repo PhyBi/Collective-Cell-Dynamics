@@ -23,7 +23,7 @@ ifeq ($(FC), gfortran)
 else ifeq ($(FC), ifort)
   # FF += -heap-arrays
   ifdef DEBUG
-  FF += -fp-stack-check -g -traceback -check bounds
+    FF += -fp-stack-check -g -traceback -warn -check all
   endif
   ifdef OMP
     FF += -qopenmp

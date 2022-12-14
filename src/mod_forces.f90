@@ -82,7 +82,8 @@ contains
 
         !! Loop Over All Cells !!
 
-	!$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index, other_bead_index)
+	!$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index) &
+    !$omp private(other_bead_index, store_ring_nb)
     grids: do icell=1,ncell
         bead_index = bead_nl_head(icell)
 
