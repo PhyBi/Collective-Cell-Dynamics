@@ -21,7 +21,7 @@ ifeq ($(FC), gfortran)
     FF += -fopenmp
   endif
 else ifeq ($(FC), ifort)
-  # FF += -heap-arrays
+  FF += -auto -traceback -static -ipo
   ifdef DEBUG
     FF += -fp-stack-check -g -traceback -warn -check all
   endif
