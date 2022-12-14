@@ -57,11 +57,13 @@ contains
 	end subroutine force
 
  	!!*** Subroutine for intercellular forces of interaction ***!!
-	subroutine interaction()
+	subroutine interaction(store_ring_nb)
 
 	use shared
     use grid_linked_list
+    use ring_nb, only: assert_are_nb_rings, init_ring_nb
           
+    logical, intent(in) :: store_ring_nb ! flag to store ring-ring neighborhood info
     integer:: i,j,l,q
     double precision:: r,frepx,frepy,dx,dy,fadhx,fadhy,factor
 	integer:: icell,jcell,nabor
@@ -75,6 +77,8 @@ contains
 			f_ady(l,:)=0.0d0
         end do
     !$omp end do nowait
+
+    ! call init_ring_nb() !TODO: until init_ring_nb is parallelized
 
         !! Loop Over All Cells !!
 
@@ -113,7 +117,9 @@ contains
 
                       					within_cutoff: if(r.lt.rc_rep) then
 
-				          		factor = (r-rc_rep)/r
+				          		if(store_ring_nb) call assert_are_nb_rings(l, q)
+                                
+                                factor = (r-rc_rep)/r
 				          		frepx = factor*dx
 					  			frepy = factor*dy
 
@@ -131,6 +137,8 @@ contains
 
                         				else if((r.le.rc_adh).and.(r.ge.rc_rep)) then within_cutoff
 
+                                if(store_ring_nb) call assert_are_nb_rings(l, q)
+                                
                                 factor = (rc_adh-r)/r
 								fadhx = factor*dx
 								fadhy = factor*dy

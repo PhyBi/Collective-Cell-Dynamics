@@ -11,6 +11,7 @@ program ccd_run
     use grid_linked_list
     use forces
     use integrator
+    use ring_nb, only: init_ring_nb
 
     implicit none
 
@@ -23,6 +24,9 @@ program ccd_run
     call log_this('Setting up neighbor list grids')
 	call gridmaps
    
+    call log_this('Setting up cell-cell neighborhood buffer')
+    call init_ring_nb()
+
     call log_this('Starting the main run')
 
     call timestamp()
@@ -47,7 +51,7 @@ program ccd_run
     
 	call force()
 
-	call interaction()
+	call interaction(store_ring_nb = mod(j1,traj_dump_int).eq.0)
 
     !$omp sections
     !$omp section

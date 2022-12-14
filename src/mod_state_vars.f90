@@ -1,4 +1,5 @@
 module state_vars
+    use ring_nb, only: ring_nb_io
     implicit none
     public
     double precision :: box
@@ -15,6 +16,7 @@ module state_vars
     contains
 
     integer function allocate_array_stat(cellnum, beadnum)
+        use ring_nb, only: allocate_ring_nb
         integer, intent(in) :: cellnum, beadnum
         integer :: seeds_size
 
@@ -30,5 +32,7 @@ module state_vars
             prng_seeds(seeds_size), &
             stat=allocate_array_stat )
         ! 0:beadnum+1 is to expand a circular array into linear one later in force
+        
+        call allocate_ring_nb(cellnum)
     end function allocate_array_stat
 end module state_vars
