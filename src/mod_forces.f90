@@ -11,26 +11,30 @@ contains
 
 	integer:: i,l
         double precision::l1,l2,dx1,dx2,dy1,dy2
+        integer :: i_minus_1, i_plus_1
    
           
 
          
      
-    !$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2)
+    !$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2, i_minus_1,i_plus_1)
   	do l=1,m
-        ! boundary condition
-	
+        !TODO: Deprecated: boundary condition.
+
           x(l,0) = x(l,n)
           y(l,0) = y(l,n)
           x(l,n+1) = x(l,1)
           y(l,n+1) = y(l,1)
-
+    
         do i=1,n
 
-                   dx1 = x(l,i-1)-x(l,i)
-                   dy1 = y(l,i-1)-y(l,i)
-                   dx2 = x(l,i)-x(l,i+1)
-                   dy2 = y(l,i)-y(l,i+1)
+                   i_minus_1 = mod(i-2+n,n) + 1
+                   i_plus_1 = mod(i+1,n)
+                   
+                   dx1 = x(l,i_minus_1)-x(l,i)
+                   dy1 = y(l,i_minus_1)-y(l,i)
+                   dx2 = x(l,i)-x(l,i_plus_1)
+                   dy2 = y(l,i)-y(l,i_plus_1)
 
                    dx1 = dx1 - box*nint(dx1/box)
                    dx2 = dx2 - box*nint(dx2/box)

@@ -34,6 +34,8 @@ program ccd_run
 	!$omp parallel default(shared) private(j1)
     timeseries: do j1=1,jf
 
+	call force()
+
     !TODO: Turning the 2 omp singles below into omp sections gives either seg fault or divide by 0 error. Why? 
     
     !$omp master
@@ -48,8 +50,6 @@ program ccd_run
     ! omp ordered would just increase overhead.
     call links()
     !$omp end single
-    
-	call force()
 
 	call interaction(store_ring_nb = mod(j1,traj_dump_int).eq.0)
 
