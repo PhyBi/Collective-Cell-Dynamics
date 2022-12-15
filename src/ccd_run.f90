@@ -23,9 +23,6 @@ program ccd_run
     
     call log_this('Setting up neighbor list grids')
 	call gridmaps
-   
-    call log_this('Setting up cell-cell neighborhood buffer')
-    call init_ring_nb()
 
     call log_this('Starting the main run')
 
@@ -49,6 +46,10 @@ program ccd_run
     ! links() couldn't be parallelized as most of it needs to run sequentially. 
     ! omp ordered would just increase overhead.
     call links()
+    !$omp end single nowait
+    
+    !$omp single
+        if(mod(j1,traj_dump_int).eq.0) call init_ring_nb()
     !$omp end single
 
 	call interaction(store_ring_nb = mod(j1,traj_dump_int).eq.0)

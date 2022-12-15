@@ -51,10 +51,6 @@ module files
         write(traj_fd, asynchronous='yes', rec=recnum, iostat=io_stat) &
             timepoint, x, y, mx, my, fx, fy, f_rpx, f_rpy, f_adx, f_ady, ring_nb_io
         if(io_stat /= 0) error stop 'Problem with writing to '//traj_fname//' @ record= '//int_to_char(recnum)
-
-        call init_ring_nb() ! Zero the ring_nb_yesno_packed array before the next assignment by interaction()
-        !TODO: This is only because init_ring_nb couldn't be parallelized sensibly. Once it can be, it should be
-        ! in interaction()
     end subroutine traj_write
 
     subroutine close_traj()
