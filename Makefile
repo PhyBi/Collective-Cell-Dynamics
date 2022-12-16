@@ -73,7 +73,7 @@ SCRIPT_DIR := scripts
 SCRIPTS := $(wildcard $(SCRIPT_DIR)/$(PACKAGE)_*)
 
 # Path to the DRIVER script that represents the entire package
-DRIVER_TEMPLATE := $(SCRIPT_DIR)/package
+DRIVER_TEMPLATE := $(SCRIPT_DIR)/driver.template
 DRIVER := $(SCRIPT_DIR)/$(PACKAGE)
 
 # Bash Completion script

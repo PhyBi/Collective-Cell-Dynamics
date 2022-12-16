@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Brief: Driver script for <package>
-# Usage: <package> [<subcommand> [<options>]]
-# Info:
-# When user wants to run <package> she usually provides subcommands [with options] to this script
-# This script then invokes the necessary executables (found in PATH) with the user-provided options
-# This script loads <package>_config.sh on startup and <package>_exit.sh before exit
-# Proving no subcommand executes the <package>_ program hidden from the user
+# Usage: <package> [<subcommand> [[<options>] <args>]]
+# Specs:
+# When user wants to run <package> she usually provides subcommands [with options and arguments] to this script
+# This script then invokes the executable <package>_<subcommand> (found in PATH) with the user-provided opts and args
+# This script also loads <package>_config.sh on startup and <package>_exit.sh before exit
+# Providing no subcommand executes the executable: <package>_
 
 whereami(){
   # Returns the absolute path of the directory this script is in
