@@ -22,11 +22,14 @@ module grid_linked_list
 	!!*** Subroutine to set up the cells and to make the list of neighbouring cells through PBC ***!!
 	subroutine gridmaps()
 	integer:: ix,iy,igridmap,alloc_stat
+    double precision:: rcut
+    double precision, parameter :: pi=dacos(-1.d0)
 
+    rcut = l0/dsin(pi/n) + rc_adh ! ring diameter + interstitial space
+    ! ring diameter estimated from circumcirle of a regular n-gon with side l0
     w=int(box/rcut)
-    !TODO: rcut should be derived from number of beads per cell and l0
-	celli = dble(w/box) !! celli is the inverse of cell length
-	if((1.d0/celli).lt.rcut) error stop 'Grid size too small compared to interaction cut-off'
+	celli = dble(w/box) ! celli is the inverse of cell length
+	if((1.d0/celli).lt.rcut) error stop 'Grid size too small compared to ring diameter + interstitial space'
     ncell=w*w
     gridmapsiz=4*ncell
     
