@@ -1,4 +1,11 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
+# Brief: Driver script for <package>
+# Usage: <package> [<subcommand> [<options>]]
+# Info:
+# When user wants to run <package> she usually provides subcommands [with options] to this script
+# This script then invokes the necessary executables (found in PATH) with the user-provided options
+# This script loads <package>_config.sh on startup and <package>_exit.sh before exit
+# Proving no subcommand executes the <package>_ program hidden from the user
 
 whereami(){
   # Returns the absolute path of the directory this script is in
@@ -13,22 +20,26 @@ whereami(){
 }
 this_script_is_at="$(whereami)"
 
+source_if_exists_in_PATH(){
+  # Sources the given script if it exists in PATH
+  local script="${1}"
+  which "${script}" &>/dev/null && source "${script}"
+}
+
 invocation="${0}"
 package="${invocation##*/}"
 
 export PATH="${this_script_is_at}/${package}_:${PATH}"
-[[ -n "${PARAMS_FILE}" ]] || PARAMS_FILE="params.in"
-export PARAMS_FILE
-sed '1i &params ! Namelist header' <(cat "${PARAMS_FILE}" 2>/dev/null; echo) > .params.in
-echo '/ ! Namelist footer' >> .params.in
+
+source_if_exists_in_PATH ${package}_config.sh
 
 subcmd="${1}"
 shift
 
 if [[ -z "${subcmd}" ]]; then
-  echo 'Press <Tab> twice after `'${package}' <space>` to know the available commands'
+  ${package}_
 else
   ${package}_${subcmd} "${@}"
 fi
 
-rm -f .params.in
+source_if_exists_in_PATH ${package}_exit.sh

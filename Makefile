@@ -77,7 +77,7 @@ DRIVER_TEMPLATE := $(SCRIPT_DIR)/package
 DRIVER := $(SCRIPT_DIR)/$(PACKAGE)
 
 # Bash Completion script
-SUBCMDS := $(patsubst $(PACKAGE)_%, %, $(notdir $(EXECS) $(SCRIPTS)))
+SUBCMDS := $(filter-out %_, %.%, $(patsubst $(PACKAGE)_%, %, $(notdir $(EXECS) $(SCRIPTS))))
 BASHCOMP := $(PACKAGE)_completion.sh
 
 # Dependency file to be generated using `fortdepend`
