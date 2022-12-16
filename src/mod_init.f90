@@ -17,6 +17,7 @@ dr = rc_rep ! initial separation between cell peripheries
 mindist = 2*radius+dr
 box = dsqrt(m*pi*mindist*mindist/4) ! box should accommodate m circumcircles with dr separation
 
+! Seeding the first cell centre at origin
 xcell(1) = 0.d0
 ycell(1) = 0.d0
 

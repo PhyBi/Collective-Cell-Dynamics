@@ -26,6 +26,7 @@ module grid_linked_list
     double precision, parameter :: pi=dacos(-1.d0)
 
     rcut = l0/dsin(pi/n) + rc_adh ! ring diameter + interstitial space
+    rcut = rcut/4 !TODO: What decides the divisor? Shouldn't this be a user-parameter or environment variable?
     ! ring diameter estimated from circumcirle of a regular n-gon with side l0
     w=int(box/rcut)
 	celli = dble(w/box) ! celli is the inverse of cell length
