@@ -8,5 +8,5 @@
 export CCD_PARAMS_PATH CCD_RC_PATH
 
 # Prepare the parameter file to be actually used by the sim engine
-sed '1i &params ! Namelist header' <(cat "${CCD_RC_PATH} ${CCD_PARAMS_PATH}" 2>/dev/null; echo) > .params.in
+sed '1i &params ! Namelist header' <(cat "${CCD_RC_PATH}" "${CCD_PARAMS_PATH}" 2>/dev/null; echo) > .params.in
 echo '/ ! Namelist footer' >> .params.in

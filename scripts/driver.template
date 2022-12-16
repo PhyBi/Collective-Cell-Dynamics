@@ -23,7 +23,7 @@ this_script_is_at="$(whereami)"
 source_if_exists_in_PATH(){
   # Sources the given script if it exists in PATH
   local script="${1}"
-  which "${script}" &>/dev/null && source "${script}"
+  command -v "${script}" &>/dev/null && source "${script}"
 }
 
 invocation="${0}"
