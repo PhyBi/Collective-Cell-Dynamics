@@ -25,12 +25,11 @@ module grid_linked_list
     double precision:: rcut
     double precision, parameter :: pi=dacos(-1.d0)
 
-    rcut = l0/dsin(pi/n) + rc_adh ! ring diameter + interstitial space
-    rcut = rcut/4 !TODO: What decides the divisor? Shouldn't this be a user-parameter or environment variable?
-    ! ring diameter estimated from circumcirle of a regular n-gon with side l0
-    w=int(box/rcut)
+    rcut = max(rc_rep, rc_adh, 2.d0*l0)  ! Grid-size estimate
+    ! 2*l0 is assuming springs may be in extended state
+    w=floor(box/rcut)
 	celli = dble(w/box) ! celli is the inverse of cell length
-	if((1.d0/celli).lt.rcut) error stop 'Grid size too small compared to ring diameter + interstitial space'
+	if((1.d0/celli).lt.rcut) error stop 'Grid size smaller than interaction cutoff'
     ncell=w*w
     gridmapsiz=4*ncell
     
