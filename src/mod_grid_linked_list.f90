@@ -23,10 +23,9 @@ module grid_linked_list
 	subroutine gridmaps()
 	integer:: ix,iy,igridmap,alloc_stat
     double precision:: rcut
-    double precision, parameter :: pi=dacos(-1.d0)
 
-    rcut = max(rc_rep, rc_adh, 2.d0*l0)  ! Grid-size estimate
-    ! 2*l0 is assuming springs may be in extended state
+    rcut = max(rc_rep, rc_adh)  ! Grid-size estimate
+    ! Note: l0 isn't in max() because the intra-force computation where l0 is required doesnt use the neighborlist
     w=floor(box/rcut)
 	celli = dble(w/box) ! celli is the inverse of cell length
 	if((1.d0/celli).lt.rcut) error stop 'Grid size smaller than interaction cutoff'
