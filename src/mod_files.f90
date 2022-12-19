@@ -121,12 +121,12 @@ module files
         open(newunit=fd, file=fname, access='sequential', form='formatted',status='replace', &
             action='write')
             write(fd,'(a,1x,es23.16)') '#Box:', boxlen
-          do l=1,size(x,1)
+          do l=1,size(x,2)
             write(fd,'(a,1x,i0)') '#Cell:', l
-            do i=1,size(x,2)
-				   x(l,i) = x(l,i) - boxlen*floor(x(l,i)/boxlen)
-				   y(l,i) = y(l,i) - boxlen*floor(y(l,i)/boxlen)
-                write(fd,*) x(l,i),y(l,i)
+            do i=1,size(x,1)
+				   x(i,l) = x(i,l) - boxlen*floor(x(i,l)/boxlen)
+				   y(i,l) = y(i,l) - boxlen*floor(y(i,l)/boxlen)
+                write(fd,*) x(i,l),y(i,l)
             end do
             write(fd,'(a,1x,i0,/)') '#End_Cell:', l
           end do

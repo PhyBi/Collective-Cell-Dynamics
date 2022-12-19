@@ -23,11 +23,11 @@ module state_vars
         call random_seed(size = seeds_size)
         
         allocate( &
-            x(1:cellnum, 1:beadnum), y(1:cellnum, 1:beadnum), &
-            mx(1:cellnum, 1:beadnum), my(1:cellnum, 1:beadnum), &
-            fx(1:cellnum, 1:beadnum), fy(1:cellnum, 1:beadnum), &
-            f_rpx(1:cellnum, 1:beadnum), f_rpy(1:cellnum, 1:beadnum), &
-            f_adx(1:cellnum, 1:beadnum), f_ady(1:cellnum, 1:beadnum), &
+            x(1:beadnum, 1:cellnum), y(1:beadnum, 1:cellnum), &
+            mx(1:beadnum, 1:cellnum), my(1:beadnum, 1:cellnum), &
+            fx(1:beadnum, 1:cellnum), fy(1:beadnum, 1:cellnum), &
+            f_rpx(1:beadnum, 1:cellnum), f_rpy(1:beadnum, 1:cellnum), &
+            f_adx(1:beadnum, 1:cellnum), f_ady(1:beadnum, 1:cellnum), &
             noise(1:cellnum*beadnum), &
             prng_seeds(seeds_size), &
             stat=allocate_array_stat )
