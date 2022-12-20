@@ -101,11 +101,12 @@ This software is built from a monolithic legacy code. Hence much had and still w
 - [x] command-line autocompletion
 - [x] very basic multithreading using OpenMP
 - [x] continuous integration and git-hooks
-- [ ] beads are stored in rows. Store them in columns instead for much performance improvement (as fortran is column major)
+- [x] beads are stored in rows. Store them in columns instead for much performance improvement (as fortran is column major)
 - [x] replace the overcomplicated neighborlist structure with a simple bead-based linked list for decreased overhead
 - [x] replace the array-bound-based implementation of circular boundary conditions of beads within cells for better maintainability 
 - [x] building the cell-cell neighborlist and dumping it in trajectory file in the most compressed way for later analysis such as hexatic order parameter
 - [x] current initialization works only for the hardcoded system size. The fix (which would also make the system size assignable by the user) is ready for deployment but can only come after the neighborlist fix.
+- [ ] consistency check for parameters
 - [ ] linting
 - [ ] performance oriented profiling and polishing
 - [x] enhancing the driver code (`ccd`) as well as the bash-completion script
