@@ -17,13 +17,21 @@ module files
 
     logical :: do_status_dump = .true. ! This flag may be set and unset using signals
     
+    real, dimension(:,:,:), allocatable, private :: compressed_fp_for_io
+    ! Double to single precision compression. Multiple arrays compressed into one big array
+    ! Declaring as permanent to avoid overhead of repetitive allocation and deallocation as temporary array
+
     contains
     
     subroutine open_traj(read_or_write, old_or_replace)
         character(len=*), intent(in) :: read_or_write, old_or_replace
-        integer :: reclen, io_stat
+        integer :: reclen, io_stat, alloc_stat
 
-        inquire(iolength=reclen) timepoint, x, y, mx, my, fx, fy, f_rpx, f_rpy, f_adx, f_ady, ring_nb_io
+        allocate(compressed_fp_for_io(10,size(x,1),size(x,2)), stat=alloc_stat)
+        if(alloc_stat /= 0) error stop 'Problem in allocating compressed_fp_for_io'
+        !TODO: All error stops should contain the subroutine/module name and variable name
+        
+        inquire(iolength=reclen) timepoint, compressed_fp_for_io, ring_nb_io
         open(newunit=traj_fd,file=traj_fname, access='direct', recl=reclen, form='unformatted', &
             status=old_or_replace, asynchronous='yes', action=read_or_write, iostat=io_stat)
         if(io_stat /= 0) error stop 'Problem with opening '//traj_fname
@@ -34,11 +42,27 @@ module files
         integer, intent(in) :: recnum
         double precision, intent(out) :: timepoint
         integer :: io_stat
+        double precision, dimension(size(mx,1),size(mx,2)) :: m_norm
 
         read(traj_fd, asynchronous='no', rec=recnum, iostat=io_stat) &
-            timepoint, x, y, mx, my, fx, fy, f_rpx, f_rpy, f_adx, f_ady, ring_nb_io
+            timepoint, compressed_fp_for_io, ring_nb_io
         if(io_stat /= 0) error stop 'Problem with reading from '//traj_fname//' @ record= '//int_to_char(recnum)
         call unpack_ring_nb()
+
+        x = dble( compressed_fp_for_io(1,:,:) )
+        y = dble( compressed_fp_for_io(2,:,:) )
+        mx = dble( compressed_fp_for_io(3,:,:) )
+        my = dble( compressed_fp_for_io(4,:,:) )
+        fx = dble( compressed_fp_for_io(5,:,:) )
+        fy = dble( compressed_fp_for_io(6,:,:) )
+        f_rpx = dble( compressed_fp_for_io(7,:,:) )
+        f_rpy = dble( compressed_fp_for_io(8,:,:) )
+        f_adx = dble( compressed_fp_for_io(9,:,:) )
+        f_ady = dble( compressed_fp_for_io(10,:,:) )
+        
+        m_norm = dsqrt(mx*mx + my*my)
+        mx = mx / m_norm
+        my = my / m_norm
     end subroutine traj_read
 
     subroutine traj_write(recnum, timepoint)
@@ -47,9 +71,20 @@ module files
         double precision, intent(in) :: timepoint
         integer :: io_stat
 
+        compressed_fp_for_io(1,:,:) = real(x)
+        compressed_fp_for_io(2,:,:) = real(y)
+        compressed_fp_for_io(3,:,:) = real(mx)
+        compressed_fp_for_io(4,:,:) = real(my)
+        compressed_fp_for_io(5,:,:) = real(fx)
+        compressed_fp_for_io(6,:,:) = real(fy)
+        compressed_fp_for_io(7,:,:) = real(f_rpx)
+        compressed_fp_for_io(8,:,:) = real(f_rpy)
+        compressed_fp_for_io(9,:,:) = real(f_adx)
+        compressed_fp_for_io(10,:,:) = real(f_ady)
+        
         call pack_ring_nb()
         write(traj_fd, asynchronous='yes', rec=recnum, iostat=io_stat) &
-            timepoint, x, y, mx, my, fx, fy, f_rpx, f_rpy, f_adx, f_ady, ring_nb_io
+            timepoint, compressed_fp_for_io, ring_nb_io
         if(io_stat /= 0) error stop 'Problem with writing to '//traj_fname//' @ record= '//int_to_char(recnum)
     end subroutine traj_write
 
