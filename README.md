@@ -12,6 +12,7 @@ Work in progress. Check [TODO](#TODO) list below.
 - [bash](https://command-not-found.com/bash) because we suck at writing fully POSIX-compliant shell scripts
 - [pv](https://command-not-found.com/pv) for showing real-time progress bar
 - [gnuplot](https://command-not-found.com/gnuplot) for visualization
+- [xz](https://command-not-found.com/xz) for trajectory compression
 
 # Build
 - Install, if non-existent, the above [dependencies](#dependencies) first
@@ -110,5 +111,6 @@ This software is built from a monolithic legacy code. Hence much had and still w
 - [ ] linting
 - [ ] performance oriented profiling and polishing
 - [x] enhancing the driver code (`ccd`) as well as the bash-completion script
+- [x] compression and archiving of run results (trajectory etc.). Also provide retrieval and garbage cleaning tools.
 - [ ] include detailed [docs](docs/)
 - [ ] include analysis tools (legacy or new)
