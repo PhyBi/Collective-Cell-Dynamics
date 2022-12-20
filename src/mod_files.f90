@@ -113,13 +113,15 @@ module files
     end subroutine cpt_write
 
     ! Dumps xy file for any frame/timestep to be consumed by third party apps like gnuplot
-    subroutine xy_dump(fname, boxlen)
+    subroutine xy_dump(fname, boxlen, comment)
         double precision, intent(in) :: boxlen
         character(len=*), intent(in) :: fname
+        character(len=*), intent(in), optional :: comment
         integer :: fd, l, i
 
         open(newunit=fd, file=fname, access='sequential', form='formatted',status='replace', &
             action='write')
+            if(present(comment)) write(fd, '(a,a)') '#', comment
             write(fd,'(a,1x,es23.16)') '#Box:', boxlen
           do l=1,size(x,2)
             write(fd,'(a,1x,i0)') '#Cell:', l
