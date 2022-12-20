@@ -7,6 +7,7 @@ This software contains the simulation engine and analysis tools for the bead-spr
 Work in progress. Check [TODO](#TODO) list below.
 
 # Dependencies
+- [gfortran](https://command-not-found.com/gfortran) or [ifort](https://gist.github.com/SomajitDey/aeb6eb4c8083185e06800e1ece4be1bd)(recommended). Note: ifort is free now, doesn't require a license anymore.
 - [fortdepend](https://github.com/ZedThree/fort_depend.py) or its [fork](https://github.com/PhyBi/fortdepend) for generating dependencies during build
 - [bash](https://command-not-found.com/bash) because we suck at writing fully POSIX-compliant shell scripts
 - [pv](https://command-not-found.com/pv) for showing real-time progress bar

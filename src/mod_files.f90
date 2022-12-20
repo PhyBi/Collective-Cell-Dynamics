@@ -40,7 +40,7 @@ module files
     subroutine traj_read(recnum, timepoint)
         use ring_nb, only: unpack_ring_nb
         integer, intent(in) :: recnum
-        double precision, intent(out) :: timepoint
+        real, intent(out) :: timepoint
         integer :: io_stat
         double precision, dimension(size(mx,1),size(mx,2)) :: m_norm
 
@@ -68,7 +68,7 @@ module files
     subroutine traj_write(recnum, timepoint)
         use ring_nb, only: pack_ring_nb, init_ring_nb
         integer, intent(in) :: recnum
-        double precision, intent(in) :: timepoint
+        real, intent(in) :: timepoint
         integer :: io_stat
 
         compressed_fp_for_io(1,:,:) = real(x)
@@ -94,7 +94,7 @@ module files
     end subroutine close_traj
 
     subroutine cpt_read(timepoint, recnum, pending_steps, params_hash)
-                double precision, intent(out) :: timepoint
+                real, intent(out) :: timepoint
                 integer, intent(out) :: recnum, pending_steps
                 character(len=40), intent(out) :: params_hash
                 integer :: ncells, nbeads_per_cell, io_stat
@@ -122,7 +122,7 @@ module files
     
     subroutine cpt_write(timepoint, recnum, pending_steps)
                 use parameters, only: m,n
-                double precision, intent(in) :: timepoint
+                real, intent(in) :: timepoint
                 integer, intent(in) :: recnum, pending_steps
 
                 ! Complete trajectory-file dumps so far and flush output buffer

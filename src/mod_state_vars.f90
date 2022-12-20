@@ -11,7 +11,7 @@ module state_vars
     double precision, dimension(:), allocatable :: noise
     integer, dimension(:), allocatable :: prng_seeds ! Stores the state of the P(seudo) R(andom) N(um) G(enerator)
     integer :: recnum=1 ! Record number the trajectory file is currently positioned at
-    double precision :: timepoint = 0.0d0 ! Time instant (#steps x dt)
+    real :: timepoint = 0.0 ! Time instant (#steps x dt). No need to store in double precision
 
     contains
 

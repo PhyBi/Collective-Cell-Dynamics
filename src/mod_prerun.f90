@@ -48,7 +48,7 @@ module prerun
         else
             traj_status='replace'
             recnum = 1
-            timepoint = 0.0d0
+            timepoint = 0.0
         end if
         if(.not. finish_prev_run) pending_steps = 0
         jf = nsamples*traj_dump_int + pending_steps
