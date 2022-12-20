@@ -58,12 +58,15 @@ ccd visual
 ccd status
 
 # To archive run results (trajectory: traj.bin and final-state/checkpoint: state.cpt)
-ccd archive
-
-# To extract archived run results
 ccd archive metadata.txt
-```
 
+# To retrieve/restore archived run results
+ccd retrieve metadata.txt
+
+# Garbage cleanup
+ccd clean_archive metadata.txt
+```
+### Other ways to pass parameters
 - If you want to use another path instead of `params.in` for the run-parameter file, put the same in the enviroment variable `CCD_PARAMS_PATH`
 
 - If all (or most) of your runs use certain common *non-default* parameter values, provide those in the key-value file (RC file) at `${HOME}/.ccdrc`. `ccd` reads these parameters before reading parameters from `params.in` or `${CCD_PARAMS_PATH}`. Values read in from the latter file take precedence in case of conflicts. Non-default locations of the RC file may be passed through the `CCD_RC_PATH` enviroment variable.
@@ -72,6 +75,17 @@ ccd archive metadata.txt
 ```bash
 ccd -p '<parameterA>=<valueA>' -p '<parameterB>=<valueB>' show_params
 ```
+
+### Organization made easy
+- Redirect the stdout of `ccd run` to metadata files as shown above.
+
+- Archive the run results by providing the metadata file to `ccd archive`.
+
+- Organize the small metadata files with commit messages and branches using `git`, and preserve them in cloud (e.g. GitHub).
+
+- Retrieve the run results later, as necessary, by providing the corresponding metadata file to `ccd retrieve`.
+
+- Backup the archive (`${HOME}/.ccd`) from time to time, copying the new files only.
 
 # Note
 If met with segmentation faults or stack-smashing error, make the stack size unlimited in the Bash session with `ulimit -s unlimited; export OMP_STACKSIZE=500m`.
