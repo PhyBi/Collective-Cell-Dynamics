@@ -22,9 +22,9 @@ hashf(){
 
 extract_hashes_from_metadata(){
     local metadata_path="${1}"
-    traj_hash="$(grep -i TRAJ_HASH "${metadata_path}" | grep -o '[0-9a-f]*')"
-    final_cpt_hash="$(grep -i FINAL_CPT_HASH "${metadata_path}" | grep -o '[0-9a-f]*')"
-    init_cpt_hash="$(grep -i INIT_CPT_HASH "${metadata_path}" | grep -o '[0-9a-f]*')"
+    traj_hash="$(grep -i TRAJ_HASH "${metadata_path}" | grep -iow '[0-9a-f]*')"
+    final_cpt_hash="$(grep -i FINAL_CPT_HASH "${metadata_path}" | grep -iow '[0-9a-f]*')"
+    init_cpt_hash="$(grep -i INIT_CPT_HASH "${metadata_path}" | grep -iow '[0-9a-f]*')"
 }
 
 integrity_check(){

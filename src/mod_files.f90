@@ -91,6 +91,7 @@ module files
     subroutine close_traj()
         close(traj_fd, status='keep')
         traj_hash = sha1(traj_fname)
+        deallocate(compressed_fp_for_io)
     end subroutine close_traj
 
     subroutine cpt_read(timepoint, recnum, pending_steps, params_hash)
@@ -148,15 +149,15 @@ module files
     end subroutine cpt_write
 
     ! Dumps xy file for any frame/timestep to be consumed by third party apps like gnuplot
-    subroutine xy_dump(fname, boxlen, comment)
+    subroutine xy_dump(fname, boxlen, title)
         double precision, intent(in) :: boxlen
         character(len=*), intent(in) :: fname
-        character(len=*), intent(in), optional :: comment
+        character(len=*), intent(in), optional :: title
         integer :: fd, l, i
 
         open(newunit=fd, file=fname, access='sequential', form='formatted',status='replace', &
             action='write')
-            if(present(comment)) write(fd, '(a,a)') '#', comment
+            if(present(title)) write(fd, '(a,1x,a)') '#Title:', title
             write(fd,'(a,1x,es23.16)') '#Box:', boxlen
           do l=1,size(x,2)
             write(fd,'(a,1x,i0)') '#Cell:', l
