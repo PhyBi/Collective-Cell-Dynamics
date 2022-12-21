@@ -1,4 +1,4 @@
-[![CI Build Status](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml/badge.svg)](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml)
+[![CI Build Status](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml/badge.svg)](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml) ![Bash completion](https://img.shields.io/badge/Commandline%20Completion-Enabled-green) ![OS](https://img.shields.io/badge/Platform-Linux%2C%20MacOS(X)%2C%20WSL-blue)
 
 # Collective Cell Dynamics
 This software contains the simulation engine and analysis tools for the bead-spring model as presented in <u>A. Mkrtchyan, J. Astrom, M. Karttunen, *Soft Matter*, 2014, **10**, 4332</u>. The model may or may not have been modified to suit our needs.
@@ -48,10 +48,10 @@ ccd init
 # Run
 ccd run [-a | --append] [-n | --no-status-dump] [-f | --force] > metadata.txt 2> logfile.txt
 
-# Checkpoint to XY dump
+# State/Checkpoint(state.cpt) to XY dump(config.xy)
 ccd cpt_to_xy
 
-# Visualize using gnuplot
+# Visualize config from XY dump(config.xy)
 ccd visual
 
 # To check live run progress
