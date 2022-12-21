@@ -1,7 +1,7 @@
 [![CI Build Status](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml/badge.svg)](https://github.com/PhyBi/Collective-Cell-Dynamics/actions/workflows/build.yml) ![Bash completion](https://img.shields.io/badge/Commandline%20Completion-Enabled-green) ![OS](https://img.shields.io/badge/Platform-Linux%2C%20MacOS(X)%2C%20WSL-blue)
 
 # Collective Cell Dynamics
-This software contains the simulation engine and analysis tools for the bead-spring model as presented in <u>A. Mkrtchyan, J. Astrom, M. Karttunen, *Soft Matter*, 2014, **10**, 4332</u>. The model may or may not have been modified to suit our needs.
+This software contains the simulation engine and analysis tools for the bead-spring model as presented in <u>A. Mkrtchyan, J. Astrom, M. Karttunen, *Soft Matter*, 2014, **10**, 4332</u>. The model may or may not have been modified to suit our needs. Complete EOMs are available [here](/docs/EOM_collective_cell_dynamics_Flocking-protected.pdf) subject to availing of license-key from us.
 
 # Status
 Work in progress. Check [TODO](#TODO) list below.
@@ -93,7 +93,7 @@ If the problem persists, rebuild with `make DEBUG=set` and report @ [issue](http
 Also try the `-heap-arrays` compiler flag (`FF`) for ifort in the Makefile.
 
 # License
-No use of this software shall be made without permission from the PI, [Dr. Dipjyoti Das](mailto:dipjyoti.das@iiserkol.ac.in).
+No use of this software shall be made without written permission from the PI, [Dr. Dipjyoti Das](mailto:dipjyoti.das@iiserkol.ac.in).
 
 # Disclaimer
 Use this software at your own risk. We the devs or this organization/lab/institute or the PI are/is not responsible for any damage caused by the use of this software.
