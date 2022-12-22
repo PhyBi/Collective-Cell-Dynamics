@@ -52,7 +52,7 @@ ccd run [-a | --append] [-n | --no-status-dump] [-f | --force] > metadata.txt 2>
 ccd cpt_to_xy
 
 # Visualize config from XY dump(config.xy)
-ccd visual
+ccd visual # Use the GNUPLOT_PATH env variable if gnuplot is not in PATH
 
 # To check live run progress
 ccd status
@@ -121,10 +121,11 @@ This software is built from a monolithic legacy code. Hence much had and still w
 - [x] replace the array-bound-based implementation of circular boundary conditions of beads within cells for better maintainability 
 - [x] building the cell-cell neighborlist and dumping it in trajectory file in the most compressed way for later analysis such as hexatic order parameter
 - [x] current initialization works only for the hardcoded system size. The fix (which would also make the system size assignable by the user) is ready for deployment but can only come after the neighborlist fix.
-- [ ] consistency check for parameters
+- [ ] consistency check for parameters while reading them in (src/mod_parameters.f90)
 - [ ] linting
 - [ ] performance oriented profiling and polishing
 - [x] enhancing the driver code (`ccd`) as well as the bash-completion script
 - [x] compression and archiving of run results (trajectory etc.). Also provide retrieval and garbage cleaning tools.
 - [ ] include detailed [docs](docs/)
 - [ ] include analysis tools (legacy or new)
+- [ ] include movie making tools : ccd traj_to_xy and ccd movie (gif and mp4)
