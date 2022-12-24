@@ -2,7 +2,6 @@
 
 program ccd_traj_to_legacy
     use files
-    use parameters, only: traj_dump_int
     implicit none
     integer :: pending_steps, rec_index, ncell, nbeads_per_cell, l, i, legacy_fd
     character(len=40) :: params_hash

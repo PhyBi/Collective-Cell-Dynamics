@@ -129,3 +129,4 @@ This software is built from a monolithic legacy code. Hence much had and still w
 - [ ] include detailed [docs](docs/)
 - [ ] include analysis tools (legacy or new)
 - [ ] include movie making tools : ccd traj_to_xy and ccd movie (gif and mp4)
+- [ ] install signal handlers for dumping progress status

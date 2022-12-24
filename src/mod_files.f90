@@ -10,10 +10,15 @@ module files
     character(len=*), parameter :: status_fname='status.lock'
     character(len=*), parameter :: cpt_fname='state.cpt'
     ! File Descriptors
-    integer :: traj_fd, final_fd, status_fd, cpt_fd
-    character(len=40) :: init_cpt_hash, final_cpt_hash, traj_hash
+    integer, protected :: traj_fd, status_fd, cpt_fd
     
+    ! File hashes(checksums)
+    character(len=40), protected :: init_cpt_hash, final_cpt_hash, traj_hash    
     namelist /checksums/ init_cpt_hash, final_cpt_hash, traj_hash
+    
+    integer, parameter:: traj_dump_int=100 ! Trajectory file dump interval
+    integer, parameter:: status_dump_int=100 ! Status file dump interval
+    integer, parameter:: cpt_dump_int=50*traj_dump_int ! Checkpoint file dump interval
 
     logical :: do_status_dump = .true. ! This flag may be set and unset using signals
     
