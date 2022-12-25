@@ -30,7 +30,7 @@ program ccd_traj_to_xy
         call traj_read(rec_index, timepoint)        
         frame=rec_index*traj_dump_int
         call xy_dump(fname=dump_dir//dump_fname_prefix//int_to_char(frame)//dump_fname_suffix, &
-                boxlen=box, title='frame_'//int_to_char(frame))
+                boxlen=box, title='Frame: '//int_to_char(frame))
         call log_this('Dumped #frame= '//int_to_char(frame))
     end do
     

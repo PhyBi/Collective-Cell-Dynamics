@@ -19,7 +19,8 @@ while getopts :H:t: opt; do
   case "${opt}" in
     H) 
         parameter="${OPTARG,,}" # Convert to lowercase
-        index="${parameter%%@*}"
+        highlight_cellnum="${parameter%%@*}"
+        index="$((highlight_cellnum-1))"
         color="${parameter##*@}"
         [[ "${color}" == "${parameter}" ]] && color='blue'
         # Build the plot command through append
