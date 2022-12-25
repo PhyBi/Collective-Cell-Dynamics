@@ -167,14 +167,16 @@ module files
             action='write')
             if(present(title)) write(fd, '(a,1x,a)') '#Title:', title
             write(fd,'(a,1x,es23.16)') '#Box:', boxlen
+
           do l=1,size(x,2)
+            write(fd,'(/)') ! Two consecutive blank records for separating datasets, each containing single cell info
             write(fd,'(a,1x,i0)') '#Cell:', l
             do i=1,size(x,1)
 				   x(i,l) = x(i,l) - boxlen*floor(x(i,l)/boxlen)
 				   y(i,l) = y(i,l) - boxlen*floor(y(i,l)/boxlen)
-                write(fd,*) x(i,l),y(i,l)
+                   write(fd,'(es23.16,1x,es23.16)') x(i,l),y(i,l)
             end do
-            write(fd,'(a,1x,i0,/)') '#End_Cell:', l
+            write(fd,'(a,1x,i0)') '#End_Cell:', l
           end do
         close(fd, status='keep')
     end subroutine xy_dump
