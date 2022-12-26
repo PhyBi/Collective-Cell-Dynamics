@@ -16,6 +16,7 @@ module files
     character(len=40), protected :: init_cpt_hash, final_cpt_hash, traj_hash    
     namelist /checksums/ init_cpt_hash, final_cpt_hash, traj_hash
     
+    !TODO: traj_dump_int should be user input parameter. Move it to mod_parameters
     integer, parameter:: traj_dump_int=100 ! Trajectory file dump interval
     integer, parameter:: status_dump_int=100 ! Status file dump interval
     integer, parameter:: cpt_dump_int=50*traj_dump_int ! Checkpoint file dump interval
@@ -167,6 +168,8 @@ module files
             action='write')
             if(present(title)) write(fd, '(a,1x,a)') '#Title:', title
             write(fd,'(a,1x,es23.16)') '#Box:', boxlen
+            write(fd,'(a)') '#Column headers:'
+            write(fd,'(a,4x,a)') 'x', 'y'
 
           do l=1,size(x,2)
             write(fd,'(/)') ! Two consecutive blank records for separating datasets, each containing single cell info

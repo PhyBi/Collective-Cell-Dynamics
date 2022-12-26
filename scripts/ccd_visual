@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Brief: Plots the given config using gnuplot.
 # Usage: ccd_visual [-t <type>] [-H <index>[@<color>]] [<path/file.xy>]
-## <type> = png | jpeg | pdf | eps | gif | svg
+## <type> = png | pdf | eps | svg
 ## <index> = <m>[{:<n>}[:<p>]] # Highlight cell no. <m> to <n> with stride <p>
 ## <color> = just name the color you want the highlighted cell to be rendered in
 # Env: GNUPLOT_PATH environment variable supplies non-default gnuplot installation paths
@@ -19,12 +19,13 @@ while getopts :H:t: opt; do
   case "${opt}" in
     H) 
         parameter="${OPTARG,,}" # Convert to lowercase
-        highlight_cellnum="${parameter%%@*}"
-        index="$((highlight_cellnum-1))"
+        parameter="${parameter%#}"
+        index="${parameter%%@*}"
         color="${parameter##*@}"
         [[ "${color}" == "${parameter}" ]] && color='blue'
         # Build the plot command through append
-        plt_cmd="${plt_cmd}, '' index ${index} using 1:2 linecolor rgbcolor('${color}') pointtype 7 pointsize 0.5"
+        plt_cmd="${plt_cmd}, '' index ${index} using 1:2 linecolor '${color}' pointtype 7 pointsize 0.5"
+        [[ "${OPTARG: -1}" == '#' ]] && plt_cmd="${plt_cmd} with filledcurves closed"
         ;;
     t) 
         output_type="${OPTARG,,}" # Convert to lowercase
@@ -36,7 +37,7 @@ while getopts :H:t: opt; do
                 term_cmd="set terminal pdfcairo enhanced size 8.6cm,8.6cm background rgbcolor('white') font 'arial,14'"
                 ;;
             eps)
-                term_cmd="set terminal postscript eps enhanced size 8.6cm,8.6cm clip nobackground font 'arial,14'"
+                term_cmd="set terminal postscript eps enhanced size 8.6cm,8.6cm clip nobackground color font 'arial,14'"
                 ;;
             svg)
                 term_cmd="set terminal svg enhanced size 1080,1080 background rgbcolor('white') font 'arial,14'"
@@ -82,7 +83,7 @@ cat > "${tmp_plt_script}" << EOF
     unset key
     set title '${title}'
     #set size square
-    plot '${xyfile}' using 1:2 linecolor black pointtype 7 pointsize 0.5 \
+    plot '${xyfile}' using 'x':'y' linecolor black pointtype 7 pointsize 0.5 \
         ${plt_cmd}
     set output
 EOF
