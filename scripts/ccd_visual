@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Brief: Plots the given config using gnuplot.
-# Usage: ccd_visual [-t <type>] [-H <index>[@<color>]] [<path/file.xy>]
+# Usage: ccd_visual [-t <type>] [-H <index>[@<color>][#]] [<path/file.xy>]
 ## <type> = png | pdf | eps | svg
 ## <index> = <m>[{:<n>}[:<p>]] # Highlight cell no. <m> to <n> with stride <p>
-## <color> = just name the color you want the highlighted cell to be rendered in
+## <color> = just name (or #RRGGBB or 0xRRGGBB) of the color you want the highlighted cell to be rendered in
+## Provide the optional '#' if you want solid fill
 # Env: GNUPLOT_PATH environment variable supplies non-default gnuplot installation paths
 ## such as while accessing wgnuplot.exe from within WSL
 # Default xy file: config.xy
