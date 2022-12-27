@@ -75,6 +75,7 @@ module files
     end subroutine traj_read
     
     ! Reads only x,y info from trajectory in threadsafe manner
+    ! It is threadsafe because it doesn't access any global variable
     subroutine threadsafe_traj_read_xy_only(recnum, timepoint, x, y)
         integer, intent(in) :: recnum
         real, intent(out) :: timepoint
