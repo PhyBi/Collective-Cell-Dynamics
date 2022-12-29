@@ -3,11 +3,11 @@
 program ccd_traj_to_legacy
     use files
     implicit none
-    integer :: pending_steps, rec_index, ncell, nbeads_per_cell, l, i, legacy_fd
+    integer :: pending_steps, current_step, rec_index, ncell, nbeads_per_cell, l, i, legacy_fd
     character(len=40) :: params_hash
     character(len=*), parameter :: legacy_fname = 'legacy.traj.txt'
     
-    call cpt_read(timepoint, recnum, pending_steps, params_hash)
+    call cpt_read(timepoint, recnum, pending_steps, current_step, params_hash)
     
     call open_traj('read', 'old')
 
