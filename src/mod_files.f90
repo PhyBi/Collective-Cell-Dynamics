@@ -262,7 +262,7 @@ module files
         write(err_fd,'(a)') 'CPU = '//dhms(cpusec)
         write(err_fd,'(a)') 'Wallclock = '//dhms(wcsec)
         write(err_fd,'(a,1x,i0)') '# Threads = ', nint(cpusec/wcsec)
-        write(err_fd,'(a,1x,i0,1x,a,/)')'Rate =', nint(steps*3600/wcsec), 'steps/hour'
+        write(err_fd,'(a,1x,i0,1x,a,/)')'Rate =', nint((steps/wcsec)*3600), 'steps/hour'
     end subroutine perf_dump
    
     subroutine log_this(msg)

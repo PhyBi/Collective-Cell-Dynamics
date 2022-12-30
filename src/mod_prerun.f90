@@ -53,10 +53,17 @@ module prerun
             pending_steps = 0
             current_step = 1
         end if
-        ji = current_step
-        jf = nsamples*traj_dump_int + pending_steps
 
-        write(status_fd,'(i0)') jf/status_dump_int
+        ji = current_step
+        jf = ji + pending_steps
+        if(append_flag_present) jf = jf + nsamples*traj_dump_int
+
+        write(status_fd,'(i0, 1x, a)') jf/status_dump_int, 'new lines to follow'
+        if(ji/status_dump_int == 1) then
+            write(status_fd,*)
+        else if(ji/status_dump_int > 1) then
+            write(status_fd, '('//int_to_char(ji/status_dump_int - 1)//'/)')
+        end if
         flush(status_fd)
         
         call log_this('Opening trajectory file: '//traj_fname)
