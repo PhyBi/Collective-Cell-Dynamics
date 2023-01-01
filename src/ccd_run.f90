@@ -84,7 +84,7 @@ program ccd_run
 
     call metadata_dump()
 
-    call perf_dump(cpusec, wcsec, jf)
+    call perf_dump(cpusec, wcsec, jf-ji+1)
 
     call log_this('Done')
 

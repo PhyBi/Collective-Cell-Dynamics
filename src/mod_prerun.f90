@@ -50,13 +50,13 @@ module prerun
         end if
 
         if(.not. finish_prev_run) then
-            pending_steps = 0
+            pending_steps = nsamples*traj_dump_int - 1
             current_step = 1
         end if
 
         ji = current_step
         jf = ji + pending_steps
-        if(append_flag_present) jf = jf + nsamples*traj_dump_int
+        if(append_flag_present .and. finish_prev_run) jf = jf + nsamples*traj_dump_int
 
         write(status_fd,'(i0, 1x, a)') jf/status_dump_int, 'new lines to follow'
         if(ji/status_dump_int == 1) then

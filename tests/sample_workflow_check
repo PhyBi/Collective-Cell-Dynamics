@@ -25,3 +25,4 @@ echo -e "\nExecuting ccd cpt_to_xy\n"
 ccd cpt_to_xy
 echo -e "\nExecuting ccd visual\n"
 ccd visual
+echo "Passed"
