@@ -50,15 +50,15 @@ program ccd_run
 
     !$omp sections
     !$omp section
-        traj_dump: if(mod(j1,traj_dump_int).eq.0) then
-            recnum = recnum + 1
-            call traj_write(recnum, timepoint)
-        end if traj_dump
-
              cpt_dump: if(mod(j1,cpt_dump_int).eq.0) then
                 call cpt_write(timepoint, recnum, jf-j1, j1)
                 call log_this('Created checkpoint @ timestep = '//int_to_char(j1))
              end if cpt_dump
+
+        traj_dump: if(mod(j1,traj_dump_int).eq.0) then
+            recnum = recnum + 1
+            call traj_write(recnum, timepoint)
+        end if traj_dump
 
         timepoint = timepoint + dt ! Update timepoint
     !$omp section

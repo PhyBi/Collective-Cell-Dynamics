@@ -19,6 +19,8 @@ ccd cpt_to_xy
 mv -f config.xy config.xy.1+1 ; mv -f traj.bin traj.bin.1+1
 
 # Compare the final traj and xy from both runs. They should agree.
-diff -q traj.bin.1+1 traj.bin.2 && echo 'Good with traj'
-diff -q config.xy.1+1 config.xy.2 && echo 'Good with config'
+diff -q traj.bin.1+1 traj.bin.2 && echo 'Good with traj' || false
+diff -q config.xy.1+1 config.xy.2 && echo 'Good with config' || false
 echo 'Passed'
+
+rm -f traj.bin* config.xy* state.cpt*
