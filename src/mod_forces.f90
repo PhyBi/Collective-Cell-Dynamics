@@ -43,13 +43,13 @@ contains
                    l2 = dsqrt(dx2*dx2 + dy2*dy2)
 
                    f_bead_x(i)=k*((l1-l0)*dx1/l1 - (l2-l0)*dx2/l2) &
-                                - 0.5d0*p*l0*(dy1/l1 + dy2/l2) 
+                                - 0.5d0*p*(dy1 + dy2)
                      
 
                    f_bead_x_avg = f_bead_x_avg + f_bead_x(i)
 
                    f_bead_y(i)=k*((l1-l0)*dy1/l1 - (l2-l0)*dy2/l2) &
-                                + 0.5d0*p*l0*(dx1/l1 + dx2/l2)
+                                + 0.5d0*p*(dx1 + dx2)
 
                    f_bead_y_avg = f_bead_y_avg + f_bead_y(i)
 	  end do
