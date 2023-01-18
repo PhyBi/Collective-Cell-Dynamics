@@ -15,7 +15,7 @@ program ccd_init
     
     call assign_params(params_fname)
 
-    if(allocate_array_stat(m, n) /= 0) error stop 'Array allocation in heap encountered some problem.'
+    if(allocate_array_stat(m, n) /= 0) error stop 'Fatal: Array allocation in heap encountered some problem.'
     allocate(rands(size(prng_seeds)))
 
     call system_clock(count=clock_tick)

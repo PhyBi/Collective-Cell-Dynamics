@@ -18,7 +18,7 @@ module prerun
         logical :: append_flag_present, finish_prev_run
 
         if(.not. acquire_lock(force = (cmd_line_flag('-f') .or. cmd_line_flag('--force')))) error stop &
-            'Uh-oh...seems like another run is going on in the current working directory. I better stop than mess up'
+            'Fatal: Uh-oh...seems like another run is going on in the current working directory. I better stop than mess up'
         
         call log_this('Reading initial state from '//cpt_fname)
         call cpt_read(timepoint, recnum, pending_steps, current_step, params_hash)
@@ -26,10 +26,10 @@ module prerun
         call log_this('Reading run parameters from '//params_fname)
         call assign_params(params_fname)
         if((size(x,2) /= m).or.(size(x,1) /= n)) error stop &
-            'System size as read in from checkpoint: '//cpt_fname// &
+            'Fatal: System size as read in from checkpoint: '//cpt_fname// &
                 ' does not match that given in parameter file: '//params_fname
         if(rc_adh .gt. box/2) error stop &
-            'Minimum image convention is at stake. Make box bigger than 2 x interaction-cutoff.'
+            'Fatal: Minimum image convention is at stake. Make box bigger than 2 x interaction-cutoff.'
         !TODO: The above should also check box/2 > max possible spring length
         ! estimate involves pressure pl0 and spring constant K - force balance FBD of regular n-gon
 

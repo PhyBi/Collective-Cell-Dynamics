@@ -19,12 +19,12 @@ program ccd_traj_to_xy
     
     ! Get (and create, if needed) the dump directory
     call get_command_argument(1, length=dump_dir_str_length, status=exitcode)
-    if(exitcode /= 0) error stop 'Pass a directory path as argument'
+    if(exitcode /= 0) error stop 'Fatal: Pass a directory path as argument'
     allocate(character(len=dump_dir_str_length) :: dump_dir)
     call get_command_argument(1, dump_dir)
     dump_dir=dump_dir//'/'
     call execute_command_line('mkdir -p '//dump_dir, exitstat=exitcode)
-    if(exitcode /= 0) error stop 'Failed to create directory '//dump_dir
+    if(exitcode /= 0) error stop 'Fatal: Failed to create directory '//dump_dir
     
     call cpt_read(timepoint, recnum, pending_steps, current_step, params_hash)
     allocate(x_(size(x,1),size(x,2)), y_(size(y,1),size(y,2)))

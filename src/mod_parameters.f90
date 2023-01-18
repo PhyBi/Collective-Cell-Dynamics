@@ -35,7 +35,7 @@ module parameters
         
         if(.not. present(check) .or. check) call check_params() !i.e. checking is the default behavior
         return
-100  error stop 'Problem with parameter input file : '//fname
+100  error stop 'Fatal: Problem with parameter input file : '//fname
     end subroutine assign_params
     
     subroutine check_params()
@@ -50,23 +50,23 @@ module parameters
         write(err_fd,'(/,a)') 'TIMESCALES:'
 
         factor = (c/k)/dt
-        if(factor < 1.0d0) error stop 'Fail: c/k < dt'        
+        if(factor < 1.0d0) error stop 'Fatal:  c/k < dt'        
         write(err_fd,'(a,1x,f0.3,1x,a)') 'c/k =', factor, 'dt'
 
         factor = (c/k_rep)/dt
-        if(factor < 1.0d0) error stop 'Fail: c/k_rep < dt'
+        if(factor < 1.0d0) error stop 'Fatal:  c/k_rep < dt'
         write(err_fd,'(a,1x,f0.3,1x,a)') 'c/k_rep =', factor, 'dt'
 
         factor = (c/k_adh)/dt
-        if(factor < 1.0d0) error stop 'Fail: c/k_adh < dt'        
+        if(factor < 1.0d0) error stop 'Fatal:  c/k_adh < dt'        
         write(err_fd,'(a,1x,f0.3,1x,a)') 'c/k_adh =', factor, 'dt'
 
         factor = (c/p)/dt
-        if(factor < 1.0d0) error stop 'Fail: c/p < dt'        
+        if(factor < 1.0d0) error stop 'Fatal:  c/p < dt'        
         write(err_fd,'(a,1x,f0.3,1x,a)') 'c/p =', factor, 'dt'        
 
         factor = (1.0d0/var)/dt
-        if(factor < 1.0d0) error stop 'Fail: 1/var < dt'        
+        if(factor < 1.0d0) error stop 'Fatal:  1/var < dt'        
         write(err_fd,'(a,1x,f0.3,1x,a)') '1/var =', factor, 'dt'
 
         write(err_fd,'(a,1x,i0,1x,a)') 'tau_align =', tau_align, 'dt'        
@@ -78,15 +78,15 @@ module parameters
         if(Vo > epsilon(0.0d0)) then !Only if motility is not insignificant
             
             factor = (l0/Vo*dt)
-            if(factor < 1.0d0) error stop 'Fail: l0 < Vo*dt'        
+            if(factor < 1.0d0) error stop 'Fatal:  l0 < Vo*dt'        
             write(err_fd,'(a,1x,f0.3,1x,a)') 'l0 =', factor, 'Vo*dt'
 
             factor = (rc_rep/Vo*dt)
-            if(factor < 1.0d0) error stop 'Fail: rc_rep < Vo*dt'        
+            if(factor < 1.0d0) error stop 'Fatal:  rc_rep < Vo*dt'        
             write(err_fd,'(a,1x,f0.3,1x,a)') 'rc_rep =', factor, 'Vo*dt'
         
             factor = (rc_adh/Vo*dt)
-            if(factor < 1.0d0) error stop 'Fail: rc_adh < Vo*dt'        
+            if(factor < 1.0d0) error stop 'Fatal:  rc_adh < Vo*dt'        
             write(err_fd,'(a,1x,f0.3,1x,a)') 'rc_adh =', factor, 'Vo*dt'
 
         end if
@@ -109,7 +109,7 @@ module parameters
         
         factor = p/(2*k*dtan(pi/n)) ! Derived from Free Body Diagram of regular n-gon with max spring length 2*l0
         ! Also this measure of p agrees with P = dEnergy/dArea for a regular n-gon that is stretched uniformly
-        if(factor > 1.0d0) error stop 'Fail: p > 2k*tan(pi/n)'
+        if(factor > 1.0d0) error stop 'Fatal:  p > 2k*tan(pi/n)'
         write(err_fd,'(a,1x,f0.3,1x,a)') 'p =', factor, '2k*tan(pi/n)'
 
         radius_circular_cell = 0.5d0*l0/dsin(pi/n) ! circumcirle of a regular n-gon with side l0
