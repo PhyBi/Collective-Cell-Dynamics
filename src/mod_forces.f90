@@ -57,6 +57,7 @@ contains
       f_bead_x_avg = f_bead_x_avg/n
       f_bead_y_avg = f_bead_y_avg/n
       
+      !TODO: Sum f is automatically 0 for every cell if pl is used instead of pl0. No need to subtract avg
       fx(:,l) = f_bead_x(:) - f_bead_x_avg ! Because total intra force for any cell/ring must be zero
       fy(:,l) = f_bead_y(:) - f_bead_y_avg ! e.g. a live amoeba in vacuum can have no net movement
     

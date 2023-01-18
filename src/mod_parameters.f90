@@ -45,7 +45,7 @@ module parameters
         
         write(err_fd,'(a,/,29("="))') 'PARAMETER CONSISTENCY REPORT:'
         
-        write(err_fd,'(/,a)') 'Units: c, k, n*l0' !TODO:
+        write(err_fd,'(/,a)') 'Units: c, k, n*l0' !TODO: Scale everything so that these really are units
 
         write(err_fd,'(/,a)') 'TIMESCALES:'
 
