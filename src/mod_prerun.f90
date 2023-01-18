@@ -28,12 +28,6 @@ module prerun
         if((size(x,2) /= m).or.(size(x,1) /= n)) error stop &
             'System size as read in from checkpoint: '//cpt_fname// &
                 ' does not match that given in parameter file: '//params_fname
-
-        !TODO: Include the following tests in assign_params by calling check_params() in mod_parameters
-        if(l0 .gt. rc_adh) call log_this('Warning: Spring length is bigger than adhesion cutoff.')
-        if(l0 .gt. rc_rep) call log_this('Warning: Spring length is bigger than repulsion cutoff.')
-        !TODO: Should the above be error stops instead of warnings ?
-        if(rc_rep .gt. rc_adh) error stop 'Repulsion cutoff is bigger than adhesion cutoff.'
         if(rc_adh .gt. box/2) error stop &
             'Minimum image convention is at stake. Make box bigger than 2 x interaction-cutoff.'
         !TODO: The above should also check box/2 > max possible spring length
