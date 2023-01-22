@@ -1,6 +1,7 @@
 !Brief: Initializes state. Positions are initialized randomly. Motility vectors initialized isotropically by default.
-!Usage: ccd_init [-r | --random]
+!Usage: ccd_init [-r | --random] [--no-check]
 ! -r | --random : Initialize motility unit vectors randomly. Vicsek order parameter may not be zero.
+! -n | --no-check : Do not check parameters for consistency
 
 program ccd_init
     use parameters
@@ -13,7 +14,7 @@ program ccd_init
     integer :: clock_tick
     real, dimension(:), allocatable :: rands
     
-    call assign_params(params_fname)
+    call assign_params(params_fname, nocheck=cmd_line_flag('-n') .or. cmd_line_flag ('--no-check'))
 
     if(allocate_array_stat(m, n) /= 0) error stop 'Fatal: Array allocation in heap encountered some problem.'
     allocate(rands(size(prng_seeds)))

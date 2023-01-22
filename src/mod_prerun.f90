@@ -24,7 +24,7 @@ module prerun
         call cpt_read(timepoint, recnum, pending_steps, current_step, params_hash)
 
         call log_this('Reading run parameters from '//params_fname)
-        call assign_params(params_fname)
+        call assign_params(params_fname, nocheck=cmd_line_flag ('--no-check'))
         if((size(x,2) /= m).or.(size(x,1) /= n)) error stop &
             'Fatal: System size as read in from checkpoint: '//cpt_fname// &
                 ' does not match that given in parameter file: '//params_fname
