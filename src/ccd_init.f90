@@ -1,18 +1,22 @@
+! Help:Begin
 !Brief: Initializes state. Positions are initialized randomly. Motility vectors initialized isotropically by default.
 !Usage: ccd_init [-r | --random] [--no-check]
 ! -r | --random : Initialize motility unit vectors randomly. Vicsek order parameter may not be zero.
 ! -n | --no-check : Do not check parameters for consistency
+! Help:End
 
 program ccd_init
     use parameters
     use state_vars
     use init
     use files
-    use utilities, only: cmd_line_flag
+    use utilities, only: cmd_line_flag, help_handler
     implicit none
     
     integer :: clock_tick
     real, dimension(:), allocatable :: rands
+    
+    call help_handler()
     
     call assign_params(params_fname, nocheck=cmd_line_flag('-n') .or. cmd_line_flag ('--no-check'))
 

@@ -1,9 +1,11 @@
+! Help:Begin
 ! NOTE: This program requires the last checkpoint too.
 ! Usage: ccd_traj_to_xy <dump directory path> ! Creates the dump directory if non-existent
+! Help:End
 
 program ccd_traj_to_xy
     use files
-    use utilities, only: int_to_char
+    use utilities, only: int_to_char, help_handler
     !$ use omp_lib, only: omp_get_max_threads
     implicit none
     integer :: pending_steps, current_step, rec_index
@@ -16,6 +18,8 @@ program ccd_traj_to_xy
     ! Following variables with trailing _ would be threadprivate
     double precision, dimension(:,:), allocatable :: x_, y_
     real :: timepoint_
+    
+    call help_handler()
     
     ! Get (and create, if needed) the dump directory
     call get_command_argument(1, length=dump_dir_str_length, status=exitcode)
