@@ -69,7 +69,7 @@ module files
         f_adx = dble( compressed_fp_for_io(:,:,9) )
         f_ady = dble( compressed_fp_for_io(:,:,10) )
         
-        m_norm = dsqrt(mx*mx + my*my)
+        m_norm = hypot(mx,my)
         mx = mx / m_norm
         my = my / m_norm
     end subroutine traj_read
