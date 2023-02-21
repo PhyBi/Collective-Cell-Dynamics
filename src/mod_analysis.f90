@@ -60,17 +60,21 @@ module analysis
         endif
     end subroutine cell_shape
     
-    ! Hexatic/Bond-orientational order parameter: h.o.p
-    ! Gives mod(sum(psi_6)/npairs)
-    subroutine psi_6(hop)
+    ! Hexatic/Bond-orientational order parameter: h.o.p. It is defined in two ways.
+    ! hop1 is from Revalee et al., J. Chem. Phys. 128, 035102 (2008); https://doi.org/10.1063/1.2825300
+    ! hop2 is from Loewe et al., Phy. Rev. Lett. 125(3):038003, 2020
+    subroutine psi_6(nrings, hop1,hop2)
         use ring_nb, only: are_nb_rings
-        double precision, intent(out) :: hop
-        integer :: nrings, ring1, ring2 ! ring/cell index
-        double precision :: re, im, abs_val, xcm_ring1, ycm_ring1, xcm_ring2, ycm_ring2
-        complex :: hop_z_sum
+        integer, intent(in) :: nrings ! Number of rings/cells
+        double precision, intent(out) :: hop1, hop2
+        integer :: ring1, ring2 ! ring/cell index
+        double precision :: re, im, xcm_ring1, ycm_ring1, xcm_ring2, ycm_ring2
+        complex, dimension(nrings) :: hop_z_sum ! Stores the complex sum for every cell/ring
+        integer, dimension(nrings) :: num_nb ! Number of nearest neighbors
+        complex :: z ! Just to store any complex value
         
-        nrings = size(x,2)
         hop_z_sum = (0.0, 0.0)
+        num_nb = 0
         
         do ring1=1,nrings-1
             call cell_cm(x(:,ring1), y(:,ring1), xcm_ring1, ycm_ring1)
@@ -79,13 +83,17 @@ module analysis
                     call cell_cm(x(:,ring2), y(:,ring2), xcm_ring2, ycm_ring2)
                     re = xcm_ring2 - xcm_ring1
                     im = ycm_ring2 - ycm_ring1
-                    abs_val = abs(cmplx(re,im))
-                    hop_z_sum = hop_z_sum + (cmplx(re,im)/abs_val)**6
+                    z = cmplx(re,im)**6 ; z = z/abs(z) ! gives e(i6theta)
+                    hop_z_sum(ring1) = hop_z_sum(ring1) + z
+                    num_nb(ring1) = num_nb(ring1) + 1
+                    hop_z_sum(ring2) = hop_z_sum(ring2) + conjg(z)
+                    num_nb(ring2) = num_nb(ring2) + 1
                 end if
             end do
         end do
 
-        hop = hop_z_sum/count(ring_nb_io/=0) ! The count gives number of neighboring pairs of rings/cells
+        hop1 = sum(abs(hop_z_sum/num_nb))/nrings
+        hop2 = abs(sum(hop_z_sum/num_nb)/nrings)
     end subroutine psi_6
 
 
