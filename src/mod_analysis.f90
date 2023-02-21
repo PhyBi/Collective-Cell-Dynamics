@@ -1,3 +1,5 @@
+!TODO: parallelize (OMP) later
+
 module analysis
     use state_vars
     use utilities, only: circular_next, eigen_2x2_mat
@@ -60,7 +62,6 @@ module analysis
     
     ! Hexatic/Bond-orientational order parameter: h.o.p
     ! Gives mod(sum(psi_6)/npairs)
-    !TODO: parallelize (OMP) later
     subroutine psi_6(hop)
         use ring_nb, only: are_nb_rings
         double precision, intent(out) :: hop
@@ -84,7 +85,7 @@ module analysis
             end do
         end do
 
-        hop = hop_z_sum/count(ring_nb_io/=0)
+        hop = hop_z_sum/count(ring_nb_io/=0) ! The count gives number of neighboring pairs of rings/cells
     end subroutine psi_6
 
 

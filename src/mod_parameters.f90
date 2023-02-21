@@ -99,7 +99,7 @@ module parameters
         write(err_fd,'(a,1x,f0.3,1x,a)') 'rc_adh =', factor, 'l0'        
         if(factor < 1.0d0) write(err_fd,'(a)') '**Warning: l0 > rc_adh'
         
-        if(rc_rep > rc_adh) write(err_fd,'(a)') '**Warning: rc_rep > rc_adh'
+        if(rc_rep > rc_adh) error stop 'Fatal: rc_rep > rc_adh. Defeats the purpose of steric and attractive forces'
         
         write(err_fd,'(/,a)') 'SPRING CONSTANT AND PRESSURE SCALES:'
 
