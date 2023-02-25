@@ -167,7 +167,7 @@ end subroutine timestamp
         double precision, dimension(2,2), intent(in) :: matrix
         double precision, intent(out) :: eigenval1, eigenval2
         double precision, dimension(2), intent(out) :: eigenvec1, eigenvec2
-        double precision :: trace, det, gap, norm
+        double precision :: trace, det, gap
         
         trace = matrix(1,1) + matrix(2,2)
         det = matrix(1,1)*matrix(2,2) - matrix(1,2)*matrix(2,1)
