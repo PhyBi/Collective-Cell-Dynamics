@@ -18,7 +18,7 @@ module analysis
     ! Provide metadata file for reading in parameters as the original parameter file may not be present
     subroutine init(metadata_fname)
         character(len=*), intent(in) :: metadata_fname
-        integer :: pending_steps, current_step, ring, nrings
+        integer :: pending_steps, current_step, ring
         character(len=40) :: params_hash
 
         call assign_params(fname=metadata_fname, nocheck=.true.)
@@ -44,6 +44,14 @@ module analysis
             'time', 'msd', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension'
     end subroutine init
     
+    ! Dump analysis results
+    subroutine dump(time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension)
+        real, intent(in) :: time
+        double precision, intent(in) :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension
+        write(analysis_dump_fd,'(8(es23.17,2x))') &
+            time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension
+    end subroutine dump
+    
     ! Takes cell/ring index and outputs cm coordinates
     subroutine cell_cm(ring, xcm, ycm)
         integer, intent(in) :: ring
@@ -65,15 +73,17 @@ module analysis
     end function cell_sd
 
     ! Takes cell/ring index and outputs perimetry info
-    subroutine cell_perimetry(ring, area, perimeter)
+    subroutine cell_perimetry(ring, area, perimeter, tension)
         use utilities, only: circular_next
         integer, intent(in) :: ring
-        double precision, intent(out) :: area, perimeter
+        double precision, intent(out) :: area, perimeter, tension
         integer :: this_bead, next_bead
-        double precision :: x_this_bead, y_this_bead, x_next_bead, y_next_bead
+        double precision :: x_this_bead, y_this_bead, x_next_bead, y_next_bead, l
 
         area=0.0d0
         perimeter=0.0d0
+        tension=0.0d0
+        
         do this_bead=1,nbeads_per_ring
             x_this_bead = x(this_bead,ring)
             y_this_bead = y(this_bead,ring)
@@ -84,9 +94,13 @@ module analysis
             
             area = area + x_this_bead*y_next_bead - x_next_bead*y_this_bead
             
-            perimeter = perimeter + hypot(x_this_bead-x_next_bead,y_this_bead-y_next_bead)
+            l = hypot(x_this_bead-x_next_bead,y_this_bead-y_next_bead)
+            perimeter = perimeter + l
+            
+            tension = tension + dabs(l-l0)
         end do
-        area=dabs(0.5d0*area)    
+        area=dabs(0.5d0*area)
+        tension = k*tension/nbeads_per_ring
     end subroutine cell_perimetry
 
     ! Takes cell/ring index and outputs its major and minor axis unit vectors

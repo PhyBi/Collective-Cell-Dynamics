@@ -79,7 +79,7 @@ contains
         !! Loop Over All Cells !!
 
 	!$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index) &
-    !$omp private(other_bead_index, store_ring_nb) &
+    !$omp private(other_bead_index) &
     !$omp reduction(+: f_rpx, f_rpy) &
     !$omp reduction(+: f_adx, f_ady)
     grids: do icell=1,ncell
