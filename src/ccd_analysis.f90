@@ -11,9 +11,10 @@ program ccd_analysis
     character(len=:), allocatable :: metadata_fname
     integer :: metadata_fname_length, exitcode
     integer :: ring, rec_index
-    double precision :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension
+    double precision :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
     double precision :: cell_area, cell_perim, sum_area, cell_tension
     double precision :: cell_vicsekop_x, cell_vicsekop_y, vicsekop_x, vicsekop_y
+    double precision :: cell_major_axis(2), cell_minor_axis(2), cell_nemop_cos_theta
     
     call help_handler()
 
@@ -34,6 +35,7 @@ program ccd_analysis
         vicsekop_y=0.d0
         sum_area=0.d0
         tension=0.d0
+        nemop = 0.d0
         
         cells: do ring=1,nrings
             msd = msd + cell_sd(ring)
@@ -46,6 +48,11 @@ program ccd_analysis
             call cell_vicsekop(ring, cell_vicsekop_x,cell_vicsekop_y)
             vicsekop_x = vicsekop_x + cell_vicsekop_x
             vicsekop_y = vicsekop_y + cell_vicsekop_y
+            
+            ! Nematic-like order parameter from Giavazzi et al. Soft Matter, 2018, 14, Sec.3.4.1 : nemop
+            call cell_shape(ring, cell_major_axis,cell_minor_axis)
+            cell_nemop_cos_theta = dot_product([cell_vicsekop_x,cell_vicsekop_y], cell_major_axis)
+            nemop = nemop + cell_nemop_cos_theta*cell_nemop_cos_theta
         end do cells
         
         msd = msd/nrings
@@ -53,10 +60,11 @@ program ccd_analysis
         areafrac = sum_area/(box*box)
         tension = tension/nrings
         vicsekop = hypot(vicsekop_x/nrings, vicsekop_y/nrings)
+        nemop = 2*(nemop/nrings) - 1.d0
         
         call psi_6(nrings, hexop1,hexop2)
         
-        call dump(timepoint, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension)
+        call dump(rec_index, timepoint, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
     end do traj_records
     
 end program ccd_analysis

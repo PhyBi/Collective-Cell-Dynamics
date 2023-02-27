@@ -40,16 +40,17 @@ module analysis
         open(newunit=analysis_dump_fd, file=analysis_dump_fname, status='replace')
         
         ! Write the column headers in analysis dump file
-        write(analysis_dump_fd,'(8(a,2x))') &
-            'time', 'msd', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension'
+        write(analysis_dump_fd,'(10(a,2x))') &
+            'rec', 'time', 'msd', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension', 'nemop'
     end subroutine init
     
     ! Dump analysis results
-    subroutine dump(time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension)
+    subroutine dump(rec_index, time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+        integer, intent(in) :: rec_index
         real, intent(in) :: time
-        double precision, intent(in) :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension
-        write(analysis_dump_fd,'(8(es23.17,2x))') &
-            time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension
+        double precision, intent(in) :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
+        write(analysis_dump_fd,'(i0,2x,9(es23.16,2x))') &
+            rec_index, time, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
     end subroutine dump
     
     ! Takes cell/ring index and outputs cm coordinates
