@@ -3,6 +3,9 @@
 ! Usage: ccd_analysis <metadata file path>
 ! Help:End
 
+
+! To minimize the number of local variables, we shall be using the same variable for storing sum and the desired avg
+!! as much as possible.
 program ccd_analysis
     use analysis
     use utilities, only: help_handler 
@@ -11,8 +14,8 @@ program ccd_analysis
     character(len=:), allocatable :: metadata_fname
     integer :: metadata_fname_length, exitcode
     integer :: ring, rec_index
-    double precision :: msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
-    double precision :: cell_area, cell_perim, sum_area, cell_tension
+    double precision :: msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
+    double precision :: cell_sd_, cell_area, cell_perim, sum_area, cell_tension
     double precision :: cell_vicsekop_x, cell_vicsekop_y, vicsekop_x, vicsekop_y
     double precision :: cell_major_axis(2), cell_minor_axis(2), cell_nemop_cos_theta
     
@@ -30,6 +33,7 @@ program ccd_analysis
         call traj_read(rec_index, timepoint)
         
         msd=0.d0
+        nongauss = 0.d0
         shapeind=0.d0
         vicsekop_x=0.d0
         vicsekop_y=0.d0
@@ -38,7 +42,9 @@ program ccd_analysis
         nemop = 0.d0
         
         cells: do ring=1,nrings
-            msd = msd + cell_sd(ring)
+            cell_sd_ = cell_sd(ring)
+            msd = msd + cell_sd_
+            nongauss = nongauss + cell_sd_*cell_sd_
             
             call cell_perimetry(ring, cell_area, cell_perim, cell_tension)
             sum_area = sum_area + cell_area
@@ -55,6 +61,7 @@ program ccd_analysis
             nemop = nemop + cell_nemop_cos_theta*cell_nemop_cos_theta
         end do cells
         
+        nongauss = nongauss/(2*msd) - 1.d0
         msd = msd/nrings
         shapeind = shapeind/nrings
         areafrac = sum_area/(box*box)
@@ -64,7 +71,7 @@ program ccd_analysis
         
         call psi_6(nrings, hexop1,hexop2)
         
-        call dump(rec_index, timepoint, msd, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+        call dump(rec_index, timepoint, msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
     end do traj_records
     
 end program ccd_analysis
