@@ -14,7 +14,7 @@ program ccd_analysis
     character(len=:), allocatable :: metadata_fname
     integer :: metadata_fname_length, exitcode
     integer :: ring, rec_index
-    double precision :: msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
+    double precision :: msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
     double precision :: cell_sd_, cell_area, cell_perim, sum_area, cell_tension
     double precision :: cell_vicsekop_x, cell_vicsekop_y, vicsekop_x, vicsekop_y
     double precision :: cell_major_axis(2), cell_minor_axis(2), cell_nemop_cos_theta
@@ -33,7 +33,7 @@ program ccd_analysis
         call traj_read(rec_index, timepoint)
         
         msd=0.d0
-        nongauss = 0.d0
+        alpha2 = 0.d0
         shapeind=0.d0
         vicsekop_x=0.d0
         vicsekop_y=0.d0
@@ -44,7 +44,7 @@ program ccd_analysis
         cells: do ring=1,nrings
             cell_sd_ = cell_sd(ring)
             msd = msd + cell_sd_
-            nongauss = nongauss + cell_sd_*cell_sd_
+            alpha2 = alpha2 + cell_sd_*cell_sd_
             
             call cell_perimetry(ring, cell_area, cell_perim, cell_tension)
             sum_area = sum_area + cell_area
@@ -61,7 +61,8 @@ program ccd_analysis
             nemop = nemop + cell_nemop_cos_theta*cell_nemop_cos_theta
         end do cells
         
-        nongauss = nongauss/(2*msd) - 1.d0
+        ! Non-gaussian parameter: M. Chiang and D. Marenduzzo, EPL, 116, 10 2016
+        alpha2 = alpha2*nrings/(2*msd*msd) - 1.d0
         msd = msd/nrings
         shapeind = shapeind/nrings
         areafrac = sum_area/(box*box)
@@ -71,7 +72,7 @@ program ccd_analysis
         
         call psi_6(nrings, hexop1,hexop2)
         
-        call dump(rec_index, timepoint, msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+        call dump(rec_index, timepoint, msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
     end do traj_records
     
 end program ccd_analysis

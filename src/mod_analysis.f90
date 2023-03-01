@@ -1,5 +1,5 @@
 !TODO: parallelize (OMP) later
-! Many subroutines/functions are prefixed with cell_. This means they compute cell_ properties.
+! Many subroutines/functions are prefixed with cell_. This means they compute cell properties only.
 ! To get average over all cells/rings, use them inside a loop over cells. This is to eliminate
 ! multiple loops.
 
@@ -8,7 +8,7 @@ module analysis
     use parameters
     implicit none
     integer :: nrings, nbeads_per_ring
-    double precision, dimension(:), allocatable :: msd_init_xcm, msd_init_ycm
+    double precision, dimension(:), allocatable :: init_xcm, init_ycm
     character(len=*), parameter :: analysis_dump_fname = 'analysis.txt'
     integer :: analysis_dump_fd
     
@@ -30,27 +30,27 @@ module analysis
         nrings=size(x,2)
         nbeads_per_ring = size(x,1)
 
-        allocate(msd_init_xcm(nrings), msd_init_ycm(nrings))
+        allocate(init_xcm(nrings), init_ycm(nrings))
         call traj_read(1, timepoint)
         
         do ring=1,nrings
-            call cell_cm(ring,msd_init_xcm(ring),msd_init_ycm(ring))
+            call cell_cm(ring,init_xcm(ring),init_ycm(ring))
         end do
         
         open(newunit=analysis_dump_fd, file=analysis_dump_fname, status='replace')
         
         ! Write the column headers in analysis dump file
         write(analysis_dump_fd,'(11(a,2x))') &
-        'rec', 'time', 'msd', 'nongauss', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension', 'nemop'
+        'rec', 'time', 'msd', 'alpha2', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension', 'nemop'
     end subroutine init
     
     ! Dump analysis results
-    subroutine dump(rec_index, time, msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+    subroutine dump(rec_index, time, msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
         integer, intent(in) :: rec_index
         real, intent(in) :: time
-        double precision, intent(in) :: msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
+        double precision, intent(in) :: msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
         write(analysis_dump_fd,'(i0,2x,10(es23.16,2x))') &
-            rec_index, time, msd, nongauss, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
+            rec_index, time, msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
     end subroutine dump
     
     ! Takes cell/ring index and outputs cm coordinates
@@ -68,8 +68,8 @@ module analysis
         double precision :: xcm, ycm, dxcm, dycm
         
         call cell_cm(ring,xcm,ycm)
-        dxcm = msd_init_xcm(ring) - xcm
-        dycm = msd_init_ycm(ring) - ycm
+        dxcm = init_xcm(ring) - xcm
+        dycm = init_ycm(ring) - ycm
         cell_sd = dxcm*dxcm + dycm*dycm
     end function cell_sd
 
@@ -134,8 +134,8 @@ module analysis
         double precision, intent(out) :: vopx, vopy
         double precision :: norm
         
-        vopx = sum((fx(:,ring) + f_adx(:,ring) + f_rpx(:,ring))*dt/c + Vo*mx(:,ring)*dt)/nbeads_per_ring
-        vopy = sum((fy(:,ring) + f_ady(:,ring) + f_rpy(:,ring))*dt/c + Vo*my(:,ring)*dt)/nbeads_per_ring
+        vopx = sum((fx(:,ring) + f_adx(:,ring) + f_rpx(:,ring))/c + Vo*mx(:,ring))/nbeads_per_ring
+        vopy = sum((fy(:,ring) + f_ady(:,ring) + f_rpy(:,ring))/c + Vo*my(:,ring))/nbeads_per_ring
         norm = hypot(vopx,vopy)
         
         vopx = vopx/norm
@@ -145,6 +145,8 @@ module analysis
     ! Hexatic/Bond-orientational order parameter: h.o.p. It is defined in two ways.
     ! hexop1 is from Revalee et al., J. Chem. Phys. 128, 035102 (2008); https://doi.org/10.1063/1.2825300
     ! hexop2 is from Loewe et al., Phy. Rev. Lett. 125(3):038003, 2020
+    ! Due to triangle law of complex numbers hexop1 and hexop2 may differ a lot.
+    ! hexop1 seems more acceptable to us.
     subroutine psi_6(nrings, hexop1,hexop2)
         use ring_nb, only: are_nb_rings
         integer, intent(in) :: nrings ! Number of rings/cells
