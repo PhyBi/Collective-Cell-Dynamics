@@ -72,7 +72,8 @@ program ccd_analysis
         
         call psi_6(nrings, hexop1,hexop2)
         
-        call dump(rec_index, timepoint, msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+        call dump(rec_index*traj_dump_int, timepoint, &
+            msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
     end do traj_records
     
 end program ccd_analysis
