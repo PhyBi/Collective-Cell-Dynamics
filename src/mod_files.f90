@@ -157,7 +157,7 @@ module files
                 open(newunit=cpt_fd,file='.cpt.tmp', access='sequential', form='unformatted', &
                     status='replace', action='write')
                     write(cpt_fd) traj_dump_int, status_dump_int, cpt_dump_int
-                    write(cpt_fd) m,n,box
+                    write(cpt_fd) m,n,box,box !TODO: Future proof against box_x,box_y for rectangular sim box
                     write(cpt_fd) prng_seeds ! Saves current state of the PRNG. To be `put=` in `random_seeds` call...
                     write(cpt_fd) x,y,mx,my ! Saves current state of the physical system
                     write(cpt_fd) timepoint ! Saves current time instant for the timeseries
