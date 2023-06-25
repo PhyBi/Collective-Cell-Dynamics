@@ -125,6 +125,7 @@ energy_min: do
     
     iter_count = iter_count + 1
 end do energy_min
+write(err_fd,'(a,1x,i0,1x,a)') 'Energy/overlap minimized after', iter_count, 'iterations'
 
 ! Construct circular cells from the seeded centres
 ! Also initialize the motility unit vectors randomly for each cell
