@@ -13,6 +13,7 @@ double precision:: dist_eq ! equilibrium distance (centre-centre)
 
 character(len=:), allocatable :: argument
 integer :: arglen
+double precision :: box_scale, box_scale_percentage
 
 real:: rands(2)
 double precision:: xcell_this,ycell_this,dx,dy
@@ -36,20 +37,25 @@ radius_l0 = 0.5d0*l0/dsin(pi/n) ! circumcirle of a regular n-gon with side l0
 mindist = 2*radius_l0+rc_rep ! rc_rep is the minimum distance between cell peripheries
 mindist2 = mindist*mindist
 
-! If box length is provided by user, use that, estimate otherwise
-! In order to estimate, use the zero/negative stress condition whereby box can accommodate all equilibrium
-! cells without steric overlap
+! If box length is provided by user with --box=<val>, use that. Estimate otherwise.
+! To estimate, use zero/negative stress condition where box can accommodate all equilibrium
+!! cells without overlap.
+! Instead of box, user may also provide a scaling factor in percentage using --box=<scale>%
+! In that case, scale the initial box estimate accordingly to get the final box.
+box_scale_percentage=100.d0
 call cmd_line_opt('--box', length=arglen)
 allocate(character(len=arglen) :: argument)
 call cmd_line_opt('--box', argument)
-if(argument /= '') then
-    read(argument,*)box
-else
+if((argument(arglen:arglen) == '%') .or. arglen == 0) then
+    if(argument(arglen:arglen) == '%') read(argument(1:arglen-1),*,err=100,end=100) box_scale_percentage
+100 box_scale = box_scale_percentage/100
     radius_eq = (2*k*dtan(pi/n)*radius_l0) / (2*k*dtan(pi/n)-p)
     if(radius_eq < 0.d0) error stop &
         'Spring-Pressure force balance non-existent. Cannot estimate boxlength. Please provide with --box='
     dist_eq = 2*radius_eq+rc_rep
-    box = dsqrt(m*pi*dist_eq*dist_eq/4) ! box should accommodate m equilibrium cells
+    box = dsqrt(m*pi*dist_eq*dist_eq/4)*box_scale ! box should accommodate m equilibrium cells
+else
+    read(argument,*) box
 endif
 deallocate(argument)
 
@@ -88,7 +94,7 @@ end do seed_cell_centres
 iter_count = 0 ! initial count of iterations
 energy_min: do
     no_overlap_found = .true.
-    if(iter_count > max_iters_emin) error stop 'Took too many cycles for energy/overlap minimization'
+    if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for energy/overlap minimization'
 
     ! Loop over all pairs
     do this=1,m-1

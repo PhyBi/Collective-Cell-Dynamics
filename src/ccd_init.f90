@@ -1,7 +1,8 @@
 ! Help:Begin
 !Brief: Initializes state. Positions are initialized randomly. Motility vectors initialized isotropically by default.
-!Usage: ccd_init [--no-check]
+!Usage: ccd_init [--no-check] [--box=<value> | --box=<scale>%]
 ! -n | --no-check : Do not check parameters for consistency
+! --box : Provide desired box length. E.g. --box=5.5. Can also provide relative length in percentage. E.g. --box=200%
 ! Help:End
 
 program ccd_init
