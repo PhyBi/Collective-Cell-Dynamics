@@ -21,7 +21,7 @@ double precision, dimension(size(x,dim=2)) :: xcell, ycell ! centre coordinates 
 double precision, dimension(size(x,dim=2)) :: xdisp, ydisp ! displacements during energy min
 integer:: this,other,iter_count,fail_count
 
-! Max trials while seeding and iterations during energy minimization
+! Max trials while seeding, and max iterations during energy minimization by eliminating overlaps
 integer, parameter:: max_trials_seed=1000, max_iters_emin=20000
 
 ! For stability of energy minimization, number of cycles needed for overlap elimination of any pair
@@ -90,11 +90,11 @@ seed_cell_centres: do this=2,m
     ycell(this) = ycell_this
 end do seed_cell_centres
 
-! Energy/overlap minimization
+! Energy minimization by eliminating overlaps
 iter_count = 0 ! initial count of iterations
 energy_min: do
     no_overlap_found = .true.
-    if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for energy/overlap minimization'
+    if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for energy minimization'
 
     ! Loop over all pairs
     do this=1,m-1
