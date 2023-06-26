@@ -34,4 +34,5 @@ program ccd_init
     call cpt_write(timepoint, recnum, 0, 1)
     
     write(err_fd,'(a,1x,"(",es23.16,",",es23.16,")")') 'Average motility vector:', sum(mx)/(m*n), sum(my)/(m*n)
+    write(err_fd,'(a,1x,es23.16)') 'Box:', box
 end program ccd_init

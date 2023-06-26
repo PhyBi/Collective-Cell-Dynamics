@@ -18,13 +18,13 @@ double precision :: box_scale, box_scale_percentage
 real:: rands(2)
 double precision:: xcell_this,ycell_this,dx,dy
 double precision, dimension(size(x,dim=2)) :: xcell, ycell ! centre coordinates of any circular cell/ring
-double precision, dimension(size(x,dim=2)) :: xdisp, ydisp ! displacements during energy min
+double precision, dimension(size(x,dim=2)) :: xdisp, ydisp ! displacements during overlap elimination
 integer:: this,other,iter_count,fail_count
 
-! Max trials while seeding, and max iterations during energy minimization by eliminating overlaps
+! Max trials while seeding, and max iterations while eliminating overlaps
 integer, parameter:: max_trials_seed=1000, max_iters_emin=20000
 
-! For stability of energy minimization, number of cycles needed for overlap elimination of any pair
+! For stability/convergence during overlap elimination, number of cycles needed for overlap elimination of any pair
 integer, parameter:: cycles_pair_nonoverlap=100
 
 logical :: no_overlap_found
@@ -90,11 +90,13 @@ seed_cell_centres: do this=2,m
     ycell(this) = ycell_this
 end do seed_cell_centres
 
-! Energy minimization by eliminating overlaps
+! Eliminating overlaps
 iter_count = 0 ! initial count of iterations
 energy_min: do
     no_overlap_found = .true.
-    if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for energy minimization'
+    if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for overlap elimination'
+    xdisp = 0.d0
+    ydisp = 0.d0
 
     ! Loop over all pairs
     do this=1,m-1
@@ -125,7 +127,7 @@ energy_min: do
     
     iter_count = iter_count + 1
 end do energy_min
-write(err_fd,'(a,1x,i0,1x,a)') 'Energy/overlap minimized after', iter_count, 'iterations'
+write(err_fd,'(a,1x,i0,1x,a)') 'Overlap eliminated after', iter_count, 'iterations'
 
 ! Construct circular cells from the seeded centres
 ! Also initialize the motility unit vectors randomly for each cell
