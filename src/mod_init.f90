@@ -16,10 +16,10 @@ integer :: arglen
 double precision :: box_scale, box_scale_percentage
 
 real:: rands(2)
-double precision:: xcell_this,ycell_this,dx,dy
+integer:: this,other,iter_count,fail_count
 double precision, dimension(size(x,dim=2)) :: xcell, ycell ! centre coordinates of any circular cell/ring
 double precision, dimension(size(x,dim=2)) :: xdisp, ydisp ! displacements during overlap elimination
-integer:: this,other,iter_count,fail_count
+double precision:: xcell_this,ycell_this,dx,dy,dr,disp_rate
 
 ! Max trials while seeding, and max iterations while eliminating overlaps
 integer, parameter:: max_trials_seed=1000, max_iters_emin=20000
@@ -91,8 +91,9 @@ seed_cell_centres: do this=2,m
 end do seed_cell_centres
 
 ! Eliminating overlaps
+disp_rate = mindist/cycles_pair_nonoverlap ! constant displacement per cycle
 iter_count = 0 ! initial count of iterations
-energy_min: do
+overlap_elim: do
     no_overlap_found = .true.
     if(iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for overlap elimination'
     xdisp = 0.d0
@@ -111,22 +112,23 @@ energy_min: do
             ! Detect overlap
             if ((dx*dx + dy*dy).lt.mindist2) then
                 no_overlap_found = .false.
-                xdisp(this) = dx/cycles_pair_nonoverlap
+                dr = hypot(dx,dy)
+                xdisp(this) = disp_rate*dx/dr ! dx/dr provides direction cosine of unit vector along dr
                 xdisp(other) = -xdisp(this)
-                ydisp(this) = dy/cycles_pair_nonoverlap
+                ydisp(this) = disp_rate*dy/dr ! dy/dr provides direction cosine of unit vector along dr
                 ydisp(other) = -ydisp(this)
             endif
         end do
     end do
     
-    if (no_overlap_found) exit energy_min
+    if (no_overlap_found) exit overlap_elim
     
     ! Move cell centres towards non-overlap
     xcell = xcell + xdisp
     ycell = ycell + ydisp
     
     iter_count = iter_count + 1
-end do energy_min
+end do overlap_elim
 write(err_fd,'(a,1x,i0,1x,a)') 'Overlap eliminated after', iter_count, 'iterations'
 
 ! Construct circular cells from the seeded centres
