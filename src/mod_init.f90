@@ -19,7 +19,7 @@ real:: rands(2)
 integer:: this,other,iter_count,fail_count
 double precision, dimension(size(x,dim=2)) :: xcell, ycell ! centre coordinates of any circular cell/ring
 double precision, dimension(size(x,dim=2)) :: xdisp, ydisp ! displacements during overlap elimination
-double precision:: xcell_this,ycell_this,dx,dy,dr,disp_rate
+double precision:: xcell_this,ycell_this,dx,dy,dr,dr2,disp_rate
 
 ! Max trials while seeding, and max iterations while eliminating overlaps
 integer, parameter:: max_trials_seed=1000, max_iters_emin=20000
@@ -108,11 +108,12 @@ overlap_elim: do
             dy = ycell_this-ycell(other)
             dx = dx - box*nint(dx/box)
             dy = dy - box*nint(dy/box)
+            dr2 = dx*dx + dy*dy
 
             ! Detect overlap
-            if ((dx*dx + dy*dy).lt.mindist2) then
+            if (dr2 .lt. mindist2) then
                 no_overlap_found = .false.
-                dr = hypot(dx,dy)
+                dr = dsqrt(dr2)
                 xdisp(this) = disp_rate*dx/dr ! dx/dr provides direction cosine of unit vector along dr
                 xdisp(other) = -xdisp(this)
                 ydisp(this) = disp_rate*dy/dr ! dy/dr provides direction cosine of unit vector along dr
