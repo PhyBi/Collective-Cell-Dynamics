@@ -60,10 +60,10 @@ Use `dimension()` format.
 [`fortran-linter`](https://github.com/cphyc/fortran-linter) or [`fprettify`](https://github.com/pseewald/fprettify) may be used for automatically stylizing the codebase:
 
 ```bash
-fprettify -l 120 -i 4 --enable-decl --case 1 1 1 0 --strict-indent --c-relations ../src/*.f90
+fprettify -l 120 -i 4 --enable-decl --case 1 1 1 0 --strict-indent --c-relations *.f90
 ```
 
 Line widths may be checked with:
 ```bash
-tests/width_check ../src/*.f90
+../tests/width_check *.f90
 ```
