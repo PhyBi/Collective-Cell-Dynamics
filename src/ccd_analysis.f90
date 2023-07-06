@@ -7,11 +7,11 @@
 !! as much as possible.
 program ccd_analysis
     use analysis
-    use utilities, only: help_handler
+    use utilities, only: cmd_line_arg, help_handler
     implicit none
 
     character(len=:), allocatable :: metadata_fname
-    integer :: metadata_fname_length, exitcode
+    integer :: metadata_fname_length
     integer :: ring, rec_index
     double precision :: msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop
     double precision :: cell_sd_, cell_area, cell_perim, sum_area, cell_tension
@@ -21,10 +21,10 @@ program ccd_analysis
     call help_handler()
 
     ! Get the metadata file path
-    call get_command_argument(1, length=metadata_fname_length, status=exitcode)
-    if (exitcode /= 0) error stop 'Fatal: Pass metadata path as argument'
+    call cmd_line_arg(1, length=metadata_fname_length)
+    if (metadata_fname_length == 0) error stop 'Fatal: Pass metadata path as argument'
     allocate (character(len=metadata_fname_length) :: metadata_fname)
-    call get_command_argument(1, metadata_fname)
+    call cmd_line_arg(1, metadata_fname)
 
     call init(metadata_fname)
 

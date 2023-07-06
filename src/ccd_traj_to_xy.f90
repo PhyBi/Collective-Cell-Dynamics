@@ -5,7 +5,7 @@
 
 program ccd_traj_to_xy
     use files
-    use utilities, only: int_to_char, help_handler
+    use utilities, only: cmd_line_arg, int_to_char, help_handler
 !$  use omp_lib, only: omp_get_max_threads
     implicit none
     integer :: pending_steps, current_step, rec_index
@@ -22,10 +22,10 @@ program ccd_traj_to_xy
     call help_handler()
 
     ! Get (and create, if needed) the dump directory
-    call get_command_argument(1, length=dump_dir_str_length, status=exitcode)
-    if (exitcode /= 0) error stop 'Fatal: Pass a directory path as argument'
+    call cmd_line_arg(1, length=dump_dir_str_length)
+    if (dump_dir_str_length == 0) error stop 'Fatal: Pass a directory path as argument'
     allocate (character(len=dump_dir_str_length) :: dump_dir)
-    call get_command_argument(1, dump_dir)
+    call cmd_line_arg(1, dump_dir)
     dump_dir = dump_dir//'/'
     call execute_command_line('mkdir -p '//dump_dir, exitstat=exitcode)
     if (exitcode /= 0) error stop 'Fatal: Failed to create directory '//dump_dir
