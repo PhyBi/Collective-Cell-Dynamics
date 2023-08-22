@@ -76,7 +76,8 @@ contains
             evolve_motility_bool = 0.0d0
             call log_this('Motility unit vectors are not being evolved')
         end if
-        
+
+        ! Associate intracellular force call with the user-chosen subroutine
         if (cmd_line_flag('--pl0')) then
             force => force_pl0
         else
