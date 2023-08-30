@@ -6,6 +6,28 @@
 ! Bragging right: This module could be easily added very late into the project thanks to the extensibility
 !! offered by the code-base design and automated build mechanism.
 
+
+!!!!!! Glossary to understand concepts mentioned below. All w.r.t a single cell !!!!!!
+
+!**Arc : A continuous segment of the cellular periphery, comprised of consecutive beads
+
+!**Lead : First bead in an arc when traversing the arc in ascending order of bead serial (i.e. anticlockwise).
+
+!**Trail : Last bead in an arc when traversing the arc in ascending order of bead serial (i.e. anticlockwise).
+
+!**Section : An isolated part of the cell. Cells unbroken by folding under PBC have only 1 section which is
+! confined by a single arc consisting of all the beads in the cell. Cells broken by folding have multiple 
+! sections. Each such section is an area enclosed by one or more arcs and one or more edges of the sim(ulation)
+! box. If the section is confined by arc(s) and one box edge only, gnuplot can create the section from the arc(s)
+! alone by creating a closed polygon from the beads. However, if the section contains two box edges, gnuplot also
+! needs the vertex of those two edges along with the arc(s) to form the section polygon.
+
+!**Virtual bead at a box corner : The vertex mentioned above. No bead may actually be positioned there. Yet we need
+! to dump the vertex/corner position in the datafile for gnuplot. Hence, virtual.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 module gnuplot
     implicit none
     private ! Most of the things here are only for the use of the public components below
@@ -24,8 +46,8 @@ module gnuplot
         generic, public :: operator(==) => int_pair_equival
     end type int_pair
 
-    ! Type to hold a continuous section of a single cell periphery, i.e. an arc
-    ! Also has a linked list nature to store an entire section of the cell
+    ! Type to hold a continuous segment of a single cell periphery, i.e. an arc
+    ! Also has a (singly) linked list nature to store an entire section of the cell
     type cell_arc
         integer :: lead = 0, trail = 0 ! Holds the indices of the two extreme beads on the arc
         type(cell_arc), pointer :: next => null() ! Points to the next arc in the same section
@@ -36,10 +58,10 @@ module gnuplot
     !! without folding, all beads of any given cell constitute a single unfragmented cell. The
     !! folding breaks the cell into sections dispersed in space, if originally it was spread
     !! across the edge(s) of the main/replical sim box.
-    type section
+    type cell_section
         type(int_pair) :: sig ! Signature: A section is identified by a certain folding amount
-        type(cell_arc), pointer :: head => null() ! Lead and current entry of linked list
-    end type section
+        type(cell_arc), pointer :: head => null() ! Head arc of the (linked) list of arcs within the section
+    end type cell_section
 
 contains
 
@@ -85,7 +107,7 @@ contains
         double precision, dimension(:), intent(in) :: x, y
 
         ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at a corner.
-        type(section), dimension(4) :: secs
+        type(cell_section), dimension(4) :: secs
         type(int_pair) :: sec_sig ! current signature to determine which section
         integer :: secs_initialized, last_sec ! #sections initialized & index of last section encountered
 
@@ -123,7 +145,7 @@ contains
 
         !!! Section construction ends
 
-        ! Structured dumping:
+        ! Structured dumping of folded coordinates:
         !! Section dumps are separated by a single blank record to signify discontinuity. Gnuplot must
         !! not join separate sections otherwise line plots and solid fills will be messed up.
         !! Mainly to aid solid fills, virtual beads at box corners are inserted as and when needed.
@@ -151,6 +173,7 @@ contains
                     end if
                 end if
 
+                ! Dump folded XY coordinates for the beads on the arc
                 arc_beads: do i = current_arc%trail, current_arc%lead, -1 ! Note trail and lead have been swapped
                     write (fd, '(es23.16,1x,es23.16,1x,i0)') x(i) - sec_sig%x*boxlen, y(i) - sec_sig%y*boxlen, i
                 end do arc_beads
@@ -184,33 +207,36 @@ contains
         double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail, boxlen
         double precision, intent(out) :: corner_x, corner_y
 
+        double precision :: x_lead_fold, y_lead_fold, x_trail_fold, y_trail_fold
         integer :: lead_axis, trail_axis ! Holds reference to the lead/trail's nearest X or Y axis
         ! Reference to the axes is defined as [1, 2, 3, 4] = [Y1, X1, Y2, X2]; e.g. 1 means Y1
-        double precision :: dx, dy
 
-        lead_axis = minloc(dabs([x_lead, y_lead, boxlen - x_lead, boxlen - y_lead]), DIM=1)
-        trail_axis = minloc(dabs([x_trail, y_trail, boxlen - x_trail, boxlen - y_trail]), DIM=1)
+        ! Fold the coordinates
+        x_lead_fold = modulo(x_lead, boxlen)
+        y_lead_fold = modulo(y_lead, boxlen)
+        x_trail_fold = modulo(x_trail, boxlen)
+        y_trail_fold = modulo(y_trail, boxlen)
+        
+        lead_axis = minloc(dabs([x_lead_fold, y_lead_fold, boxlen - x_lead_fold, boxlen - y_lead_fold]), DIM=1)
+        trail_axis = minloc(dabs([x_trail_fold, y_trail_fold, boxlen - x_trail_fold, boxlen - y_trail_fold]), DIM=1)
 
         ! Ref. to X axes are even and that to Y are odd. Only odd+odd gives odd.
         need_virtual = mod(lead_axis + trail_axis, 2) /= 0
         ! True only if one of lead and trail is nearest to X and the other to Y axis.
         ! Otherwise, they wouldn't need virtual bead at all.
 
-        dx = x_lead - x_trail
-        dy = y_lead - y_trail
-
         ! Determine which corner of the box is appropriate to be inserted as a virtual bead, if needed
         if (need_virtual) then
-            if (dx > 0 .and. dy < 0) then
+            if (lead_axis == 2 .and. trail_axis == 1) then ! Lead on X1, Trail on Y1
                 corner_x = 0.d0
                 corner_y = 0.d0
-            else if (dx > 0 .and. dy > 0) then
+            else if (lead_axis == 3 .and. trail_axis == 2) then ! Lead on Y2, Trail on X1
                 corner_x = boxlen
                 corner_y = 0.d0
-            else if (dx < 0 .and. dy > 0) then
+            else if (lead_axis == 4 .and. trail_axis == 3) then ! Lead on X2, Trail on Y2
                 corner_x = boxlen
                 corner_y = boxlen
-            else
+            else ! Lead on Y1, Trail on X2
                 corner_x = 0.d0
                 corner_y = boxlen
             end if
