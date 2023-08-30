@@ -182,16 +182,20 @@ contains
         double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail, boxlen
         type(int_pair), intent(out) :: corner
 
-        integer :: lead_axis, trail_axis
+        integer :: lead_axis, trail_axis ! Holds reference to the lead/trail's nearest X or Y axis
+        ! Reference to the axes is defined as [1, 2, 3, 4] = [Y1, X1, Y2, X2]; e.g. 1 means Y1
         double precision :: dx, dy
 
         lead_axis = minloc(dabs([x_lead, y_lead, boxlen - x_lead, boxlen - y_lead]), DIM=1)
         trail_axis = minloc(dabs([x_trail, y_trail, boxlen - x_trail, boxlen - y_trail]), DIM=1)
         
+        ! Ref. to X axes are even and that to Y are odd. Only odd+odd gives odd.
+        need_virtual = mod(lead_axis + trail_axis, 2) /= 0
+        ! True only if one of lead and trail is nearest to X and the other to Y axis.
+        ! Otherwise, they wouldn't need virtual bead at all.
+
         dx = x_lead - x_trail
         dy = y_lead - y_trail
-
-        need_virtual = mod(lead_axis + trail_axis, 2) /= 0
 
         if (need_virtual) then
             if (dx > 0 .and. dy < 0) then
