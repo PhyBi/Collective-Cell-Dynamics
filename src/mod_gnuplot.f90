@@ -6,7 +6,6 @@
 ! Bragging right: This module could be easily added very late into the project thanks to the extensibility
 !! offered by the code-base design and automated build mechanism.
 
-
 !!!!!! Glossary to understand concepts mentioned below. All w.r.t a single cell !!!!!!
 
 !**Arc : A continuous segment of the cellular periphery, comprised of consecutive beads
@@ -16,7 +15,7 @@
 !**Trail : Last bead in an arc when traversing the arc in ascending order of bead serial (i.e. anticlockwise).
 
 !**Section : An isolated part of the cell. Cells unbroken by folding under PBC have only 1 section which is
-! confined by a single arc consisting of all the beads in the cell. Cells broken by folding have multiple 
+! confined by a single arc consisting of all the beads in the cell. Cells broken by folding have multiple
 ! sections. Each such section is an area enclosed by one or more arcs and one or more edges of the sim(ulation)
 ! box. If the section is confined by arc(s) and one box edge only, gnuplot can create the section from the arc(s)
 ! alone by creating a closed polygon from the beads. However, if the section contains two box edges, gnuplot also
@@ -26,7 +25,6 @@
 ! to dump the vertex/corner position in the datafile for gnuplot. Hence, virtual.
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 module gnuplot
     implicit none
@@ -109,7 +107,7 @@ contains
         ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at a corner.
         type(cell_section), dimension(4) :: secs
         type(int_pair) :: sec_sig ! current signature to determine which section
-        integer :: secs_initialized, last_sec ! #sections initialized & index of last section encountered
+        integer :: nsecs, last_sec ! number of sections & index of last section encountered
 
         integer :: i ! bead serial
         type(cell_arc), pointer :: current_arc
@@ -119,29 +117,29 @@ contains
 
         !!! Section construction begins
 
-        secs_initialized = 0
+        nsecs = 0
         last_sec = 0
 
         ! Looping over beads in ascending order
-        do i = 1, size(x)
+        cell_beads: do i = 1, size(x)
             sec_sig = int_pair(floor(x(i)/boxlen), floor(y(i)/boxlen))
             if (last_sec > 0) then
                 if (sec_sig == secs(last_sec)%sig) then
                     current_arc%trail = i
-                    cycle
+                    cycle cell_beads
                 end if
             end if
-            last_sec = findloc(secs(1:secs_initialized)%sig == sec_sig, .true., DIM=1)
+            last_sec = findloc(secs(1:nsecs)%sig == sec_sig, .true., DIM=1)
             if (last_sec == 0) then
-                secs_initialized = secs_initialized + 1
-                if (secs_initialized > 4) error stop 'Fatal: More than 4 sections'
-                last_sec = secs_initialized
+                nsecs = nsecs + 1
+                if (nsecs > 4) error stop 'Fatal: More than 4 sections..unexpected!'
+                last_sec = nsecs
                 secs(last_sec)%sig = sec_sig
             end if
             allocate (current_arc)
             current_arc = cell_arc(lead=i, next=secs(last_sec)%head)
             secs(last_sec)%head => current_arc
-        end do
+        end do cell_beads
 
         !!! Section construction ends
 
@@ -150,7 +148,8 @@ contains
         !! not join separate sections otherwise line plots and solid fills will be messed up.
         !! Mainly to aid solid fills, virtual beads at box corners are inserted as and when needed.
 
-        sections: do last_sec = 1, secs_initialized
+        ! Loop over sections
+        sections: do last_sec = 1, nsecs
             sec_sig = secs(last_sec)%sig
             current_arc => secs(last_sec)%head
 
@@ -159,19 +158,21 @@ contains
             !! messing up any possible continuity. To maintain continuity, the arc direction must also be reversed.
             !! This means swapping the lead and trail beads. This would make all the beads sorted in descending order.
 
-            sec_extrm = current_arc%trail ! Holds first extreme bead (trail/lead) encountered in a section
-            last_extrm = 0 ! Holds the last extreme point (trail/lead) encountered in the last arc
-            linked_list: do
-                if (.not. associated(current_arc)) exit linked_list
+            sec_extrm = current_arc%trail ! Holds first extreme bead encountered in a section
+            last_extrm = 0 ! Holds the last extreme bead encountered in the last arc
 
-                if (last_extrm /= 0) then
-                    ! Dump virtual bead at a sim box corner if needed
+            ! Traverse the linked_list of arcs within a section
+            arcs: do
+                if (.not. associated(current_arc)) exit arcs
+
+                ! Dump virtual bead at a sim box corner if needed
+                inter_arc_virtual: if (last_extrm /= 0) then
                     if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail), &
                                      boxlen, vx, vy)) then
                         write (fd, '(a)') '#Virtual bead follows:'
                         write (fd, '(es23.16,1x,es23.16)') vx, vy
                     end if
-                end if
+                end if inter_arc_virtual
 
                 ! Dump folded XY coordinates for the beads on the arc
                 arc_beads: do i = current_arc%trail, current_arc%lead, -1 ! Note trail and lead have been swapped
@@ -180,17 +181,18 @@ contains
 
                 last_extrm = current_arc%lead
                 current_arc => current_arc%next
-            end do linked_list
+            end do arcs
 
-            if (secs_initialized > 1) then
+            ! Dump virtual bead at a sim box corner if needed
+            section_virtual: if (nsecs > 1) then ! Doesn't need virtual bead for unbroken cells (i.e. nsecs = 1)
                 if (last_extrm /= circular_next(sec_extrm, +1, size(x))) then
-                    ! No discontinuity (so no need for virtual bead at corner) between beads circular_next to each other
+                    ! No discontinuity (no need for virtual bead at corner) between beads circular_next to each other
                     if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), boxlen, vx, vy)) then
                         write (fd, '(a)') '#Virtual bead follows:'
                         write (fd, '(es23.16,1x,es23.16)') vx, vy
                     end if
                 end if
-            end if
+            end if section_virtual
 
             write (fd, *) ! A blank record to signify discontinuity in gnuplot data set
 
@@ -199,47 +201,55 @@ contains
     end subroutine dump_cell_xy
 
     ! Determine if any of the sim box corner is required to be added as a virtual bead.
-    ! Also output the desired corner coordinates.
-    ! Takes lead and trail coordinates as well as sim box length as inputs.
-    ! Corner is the one that is on the left as we move from lead to trail along a
-    !! lead-trail joining arc anticlockwise.
-    logical function need_virtual(x_lead, y_lead, x_trail, y_trail, boxlen, corner_x, corner_y)
-        double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail, boxlen
+    ! If one of two consecutive arcs in a section of a broken cell meets X1(X2) axis and the other arc
+    ! meets Y1(Y2) axis, the desired corner is at the intersection of the two axes.
+    ! The following function takes as input the coordinates of the two beads at the edges of the two arcs
+    ! that are nearest to the axes they seemingly meet/touch. Outputs the desired corner coordinates.
+
+    logical function need_virtual(xa, ya, xb, yb, boxlen, corner_x, corner_y)
+        double precision, intent(in) :: xa, ya, xb, yb, boxlen
         double precision, intent(out) :: corner_x, corner_y
 
-        double precision :: x_lead_fold, y_lead_fold, x_trail_fold, y_trail_fold
-        integer :: lead_axis, trail_axis ! Holds reference to the lead/trail's nearest X or Y axis
+        double precision :: xa_fold, ya_fold, xb_fold, yb_fold
+        integer :: a_axis, b_axis ! Holds reference to the bead a(b)'s nearest X or Y axis
         ! Reference to the axes is defined as [1, 2, 3, 4] = [Y1, X1, Y2, X2]; e.g. 1 means Y1
+        integer :: corner_sig ! Holds unique signature of the desired corner
 
-        ! Fold the coordinates
-        x_lead_fold = modulo(x_lead, boxlen)
-        y_lead_fold = modulo(y_lead, boxlen)
-        x_trail_fold = modulo(x_trail, boxlen)
-        y_trail_fold = modulo(y_trail, boxlen)
-        
-        lead_axis = minloc(dabs([x_lead_fold, y_lead_fold, boxlen - x_lead_fold, boxlen - y_lead_fold]), DIM=1)
-        trail_axis = minloc(dabs([x_trail_fold, y_trail_fold, boxlen - x_trail_fold, boxlen - y_trail_fold]), DIM=1)
+        ! Fold the input coordinates
+        xa_fold = modulo(xa, boxlen)
+        ya_fold = modulo(ya, boxlen)
+        xb_fold = modulo(xb, boxlen)
+        yb_fold = modulo(yb, boxlen)
 
-        ! Ref. to X axes are even and that to Y are odd. Only odd+odd gives odd.
-        need_virtual = mod(lead_axis + trail_axis, 2) /= 0
+        a_axis = minloc(dabs([xa_fold, ya_fold, boxlen - xa_fold, boxlen - ya_fold]), DIM=1)
+        b_axis = minloc(dabs([xb_fold, yb_fold, boxlen - xb_fold, boxlen - yb_fold]), DIM=1)
+
+        ! Ref. to X axes are even and that to Y are odd. Only even+odd gives odd, not odd+odd or even+even.
+        need_virtual = mod(a_axis + b_axis, 2) /= 0
         ! True only if one of lead and trail is nearest to X and the other to Y axis.
         ! Otherwise, they wouldn't need virtual bead at all.
 
         ! Determine which corner of the box is appropriate to be inserted as a virtual bead, if needed
         if (need_virtual) then
-            if (lead_axis == 2 .and. trail_axis == 1) then ! Lead on X1, Trail on Y1
-                corner_x = 0.d0
-                corner_y = 0.d0
-            else if (lead_axis == 3 .and. trail_axis == 2) then ! Lead on Y2, Trail on X1
-                corner_x = boxlen
-                corner_y = 0.d0
-            else if (lead_axis == 4 .and. trail_axis == 3) then ! Lead on X2, Trail on Y2
-                corner_x = boxlen
-                corner_y = boxlen
-            else ! Lead on Y1, Trail on X2
-                corner_x = 0.d0
-                corner_y = boxlen
-            end if
+
+            ! The following product gives a unique value for each of the 4 corners of sim box:
+            corner_sig = a_axis*b_axis
+
+            get_corner:select case(corner_sig)
+            case (2) ! a on X1, b on Y1, (i.e. a_axis == 2 .and. b_axis == 1) and vice versa
+            corner_x = 0.d0
+            corner_y = 0.d0
+            case (6) ! a on Y2, b on X1, (i.e. a_axis == 3 .and. b_axis == 2) and vice versa
+            corner_x = boxlen
+            corner_y = 0.d0
+            case (12) ! a on X2, b on Y2, (i.e. a_axis == 4 .and. b_axis == 3) and vice versa
+            corner_x = boxlen
+            corner_y = boxlen
+            case (4) ! a on Y1, b on X2, (i.e. a_axis == 1 .and. b_axis == 4) and vice versa
+            corner_x = 0.d0
+            corner_y = boxlen
+            end select get_corner
+
         end if
     end function need_virtual
 
