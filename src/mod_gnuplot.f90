@@ -32,7 +32,7 @@ module gnuplot
     end type cell_arc
 
     ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at any corner
-    ! A section is identified by a certain folding amount. This is because, originally, i.e. 
+    ! A section is identified by a certain folding amount. This is because, originally, i.e.
     !! without folding, all beads of any given cell constitute a single unfragmented cell. The
     !! folding breaks the cell into sections dispersed in space, if originally it was spread
     !! across the edge(s) of the main/replical sim box.
@@ -62,7 +62,7 @@ contains
         if (present(title)) write (fd, '(a,1x,a)') '#Title:', title
         write (fd, '(a,1x,es23.16)') '#Box:', boxlen
         write (fd, '(a)') '#Column headers:'
-        write (fd, '(a,4x,a)') 'x', 'y'
+        write (fd, '(a,4x,a,4x,a)') 'x', 'y', 'i'
 
         cells: do l = 1, size(x, 2)
             ! Two consecutive blank records for separating datasets containing single cell info
@@ -79,6 +79,7 @@ contains
     ! Structured implies addition of dataset discontinuity (single blank record)
     !! and virtual beads as necessary for cells broken due to folding.
     subroutine dump_cell_xy(fd, boxlen, x, y)
+        use utilities, only: circular_next
         integer, intent(in) :: fd
         double precision, intent(in) :: boxlen
         double precision, dimension(:), intent(in) :: x, y
@@ -92,20 +93,21 @@ contains
         type(cell_arc), pointer :: current_arc
 
         type(int_pair) :: corner
-        integer :: sec_lead, last_trail
+        integer :: sec_extrm, last_extrm
 
         !!! Section construction begins
 
         secs_initialized = 0
         last_sec = 0
 
+        ! Looping over beads in ascending order
         do i = 1, size(x)
             sec_sig = int_pair(floor(x(i)/boxlen), floor(y(i)/boxlen))
             if (last_sec > 0) then
                 if (sec_sig == secs(last_sec)%sig) then
                     current_arc%trail = i
                     cycle
-                 end if
+                end if
             end if
             last_sec = findloc(secs(1:secs_initialized)%sig == sec_sig, .true., DIM=1)
             if (last_sec == 0) then
@@ -122,36 +124,49 @@ contains
         !!! Section construction ends
 
         ! Structured dumping:
-        !! Section dumps are separated by a single blank record to signify discontinuity
-        !! Virtual beads inserted as and when needed
+        !! Section dumps are separated by a single blank record to signify discontinuity. Gnuplot must
+        !! not join separate sections otherwise line plots and solid fills will be messed up.
+        !! Mainly to aid solid fills, virtual beads @ box corners are inserted as and when needed.
 
         sections: do last_sec = 1, secs_initialized
             sec_sig = secs(last_sec)%sig
             current_arc => secs(last_sec)%head
-            sec_lead = current_arc%lead
-            last_trail = 0
 
+            ! Traversing the linked list below outputs arcs in reverse order than they were put in the list.
+            !! Beads in a section may not maintain any order (ascending or descending) in this approach, hence
+            !! messing up any possible continuity. To maintain continuity, the arc direction must also be reversed.
+            !! This means swapping the lead and trail beads. This would make all the beads sorted in descending order.
+
+            sec_extrm = current_arc%trail ! Holds first extreme bead (trail/lead) encountered in a section
+            last_extrm = 0 ! Holds the last extreme point (trail/lead) encountered in the last arc
             linked_list: do
                 if (.not. associated(current_arc)) exit linked_list
 
-                if (last_trail /= 0) then
-             if (need_virtual(x(last_trail), y(last_trail), x(current_arc%lead), y(current_arc%lead), corner)) then
-                        ! Dump virtual bead @ a sim box corner
+                if (last_extrm /= 0) then
+                    !TODO: Understand why the following order of args in need_virtual works
+                    if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail),&
+                        corner)) then ! Dump virtual bead @ a sim box corner
+                        write(fd,'(a)') '#Virtual bead follows:'
                         write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
-                     end if
+                    end if
                 end if
 
-                arc_beads: do i = current_arc%lead, current_arc%trail
-                    write (fd, '(es23.16,1x,es23.16)') x(i) - sec_sig%x*boxlen, y(i) - sec_sig%y*boxlen
+                arc_beads: do i = current_arc%trail, current_arc%lead, -1 ! Note trail and lead have been swapped
+                    write (fd, '(es23.16,1x,es23.16,1x,i0)') x(i) - sec_sig%x*boxlen, y(i) - sec_sig%y*boxlen, i
                 end do arc_beads
 
-                last_trail = current_arc%trail
+                last_extrm = current_arc%lead
                 current_arc => current_arc%next
             end do linked_list
 
             if (secs_initialized > 1) then
-                if (need_virtual(x(sec_lead), y(sec_lead), x(last_trail), y(last_trail), corner)) then
+                !TODO: Understand why circular_next works and whether needed for between arc virtual insert above
+                if (last_extrm /= circular_next(sec_extrm, +1, size(x))) then
+                ! No discontinuity (so no need for virtual corner) between beads circular_next to each other
+                if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), corner)) then
+                    write(fd,'(a)') '#Virtual bead follows:'
                     write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
+                end if
                 end if
             end if
 
