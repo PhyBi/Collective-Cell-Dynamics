@@ -1,8 +1,9 @@
-! This module holds code dedicated to visualization of the 2D configs in gnuplot
-! Special code is required to create special XY datafiles (containing discontinuities and
-!! virtual beads) so that gnuplot can handle cells broken into pieces by folding under PBC.
+! This module holds code dedicated to visualization of the 2D configurations in gnuplot.
+! This is required to create special XY datafile (containing section based discontinuities and virtual beads
+!! at box corners) so that gnuplot can handle cells that are broken into pieces (i.e. sections) due to folding
+!! under PBC. Gnuplot should be able to produce solid fills and line plots of such cells from the datafile.
 
-! Bragging right: This module could be added late into the project thanks to the extensibility
+! Bragging right: This module could be easily added very late into the project thanks to the extensibility
 !! offered by the code-base design and automated build mechanism.
 
 module gnuplot
@@ -24,14 +25,17 @@ module gnuplot
     end type int_pair
 
     ! Type to hold a continuous section of a single cell periphery, i.e. an arc
-    ! Also has a linked list nature to store an entire section of the cell needed by gnuplot
+    ! Also has a linked list nature to store an entire section of the cell
     type cell_arc
         integer :: lead = 0, trail = 0 ! Holds the indices of the two extreme beads on the arc
         type(cell_arc), pointer :: next => null() ! Points to the next arc in the same section
     end type cell_arc
 
-    ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at a corner.
-    ! A section is identified by a certain folding amount
+    ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at any corner
+    ! A section is identified by a certain folding amount. This is because, originally, i.e. 
+    !! without folding, all beads of any given cell constitute a single unfragmented cell. The
+    !! folding breaks the cell into sections dispersed in space, if originally it was spread
+    !! across the edge(s) of the main/replical sim box.
     type section
         type(int_pair) :: sig ! Signature: A section is identified by a certain folding amount
         type(cell_arc), pointer :: head => null() ! Lead and current entry of linked list
@@ -117,7 +121,9 @@ contains
 
         !!! Section construction ends
 
-        !!! Structured dumping
+        ! Structured dumping:
+        !! Section dumps are separated by a single blank record to signify discontinuity
+        !! Virtual beads inserted as and when needed
 
         sections: do last_sec = 1, secs_initialized
             sec_sig = secs(last_sec)%sig
