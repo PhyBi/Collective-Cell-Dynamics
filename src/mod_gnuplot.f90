@@ -145,7 +145,7 @@ contains
                 if (last_extrm /= 0) then
                     !TODO: Understand why the following order of args in need_virtual works
                     if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail),&
-                        corner)) then ! Dump virtual bead @ a sim box corner
+                        boxlen, corner)) then ! Dump virtual bead @ a sim box corner
                         write(fd,'(a)') '#Virtual bead follows:'
                         write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
                     end if
@@ -163,7 +163,7 @@ contains
                 !TODO: Understand why circular_next works and whether needed for between arc virtual insert above
                 if (last_extrm /= circular_next(sec_extrm, +1, size(x))) then
                 ! No discontinuity (so no need for virtual corner) between beads circular_next to each other
-                if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), corner)) then
+                if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), boxlen, corner)) then
                     write(fd,'(a)') '#Virtual bead follows:'
                     write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
                 end if
@@ -178,19 +178,20 @@ contains
 
     ! Determine if any of the sim box corner is required to be added as a virtual bead
     ! Returns corner in boxlen unit as an int_pair: (0,0), (0,1), (1,0), (1,1)
-    logical function need_virtual(x_lead, y_lead, x_trail, y_trail, corner)
-        double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail
+    logical function need_virtual(x_lead, y_lead, x_trail, y_trail, boxlen, corner)
+        double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail, boxlen
         type(int_pair), intent(out) :: corner
 
-        double precision, parameter :: tolerance = dtan(dacos(-1.d0)/18) ! tan(10 degree) is almost parallel to X
-        double precision :: dx, dy, slope
+        integer :: lead_axis, trail_axis
+        double precision :: dx, dy
 
-        ! If line joining lead and trail is not almost parallel to X or Y axes
+        lead_axis = minloc(dabs([x_lead, y_lead, boxlen - x_lead, boxlen - y_lead]), DIM=1)
+        trail_axis = minloc(dabs([x_trail, y_trail, boxlen - x_trail, boxlen - y_trail]), DIM=1)
+        
         dx = x_lead - x_trail
         dy = y_lead - y_trail
-        slope = dabs(min(dx, dy)/max(dx, dy))
 
-        need_virtual = (slope > tolerance)
+        need_virtual = mod(lead_axis + trail_axis, 2) /= 0
 
         if (need_virtual) then
             if (dx > 0 .and. dy < 0) then
