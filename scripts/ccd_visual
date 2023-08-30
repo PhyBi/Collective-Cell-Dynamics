@@ -34,7 +34,7 @@ while getopts :H:t:h opt; do
           highlighter="line"
         fi
         # Build the plot command through append
-        plt_cmd="${plt_cmd}, '' ${index} using 'x':'y' linecolor '${color:-blue}' with ${highlighter}"
+        plt_cmd="${plt_cmd}, '' ${index} using 1:2 linecolor '${color:-blue}' with ${highlighter}"
         ;;
     t) 
         output_type="${OPTARG,,}" # Convert to lowercase
