@@ -62,7 +62,7 @@ contains
         if (present(title)) write (fd, '(a,1x,a)') '#Title:', title
         write (fd, '(a,1x,es23.16)') '#Box:', boxlen
         write (fd, '(a)') '#Column headers:'
-        write (fd, '(a,4x,a,4x,a)') 'x', 'y', 'i'
+        write (fd, '(a,4x,a,4x,a)') 'x', 'y', 'bead'
 
         cells: do l = 1, size(x, 2)
             ! Two consecutive blank records for separating datasets containing single cell info
@@ -77,7 +77,7 @@ contains
 
     ! Dumps folded structured XY for the given cellular configuration.
     ! Structured implies addition of dataset discontinuity (single blank record)
-    !! and virtual beads as necessary for cells broken due to folding.
+    !! and virtual beads at box corners as necessary for cells broken due to folding.
     subroutine dump_cell_xy(fd, boxlen, x, y)
         use utilities, only: circular_next
         integer, intent(in) :: fd
@@ -92,7 +92,7 @@ contains
         integer :: i ! bead serial
         type(cell_arc), pointer :: current_arc
 
-        type(int_pair) :: corner
+        double precision :: vx, vy ! Holds coordinates of the virtual bead at box corners
         integer :: sec_extrm, last_extrm
 
         !!! Section construction begins
@@ -126,7 +126,7 @@ contains
         ! Structured dumping:
         !! Section dumps are separated by a single blank record to signify discontinuity. Gnuplot must
         !! not join separate sections otherwise line plots and solid fills will be messed up.
-        !! Mainly to aid solid fills, virtual beads @ box corners are inserted as and when needed.
+        !! Mainly to aid solid fills, virtual beads at box corners are inserted as and when needed.
 
         sections: do last_sec = 1, secs_initialized
             sec_sig = secs(last_sec)%sig
@@ -143,11 +143,11 @@ contains
                 if (.not. associated(current_arc)) exit linked_list
 
                 if (last_extrm /= 0) then
-                    !TODO: Understand why the following order of args in need_virtual works
-                    if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail),&
-                        boxlen, corner)) then ! Dump virtual bead @ a sim box corner
-                        write(fd,'(a)') '#Virtual bead follows:'
-                        write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
+                    ! Dump virtual bead at a sim box corner if needed
+                    if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail), &
+                                     boxlen, vx, vy)) then
+                        write (fd, '(a)') '#Virtual bead follows:'
+                        write (fd, '(es23.16,1x,es23.16)') vx, vy
                     end if
                 end if
 
@@ -160,13 +160,12 @@ contains
             end do linked_list
 
             if (secs_initialized > 1) then
-                !TODO: Understand why circular_next works and whether needed for between arc virtual insert above
                 if (last_extrm /= circular_next(sec_extrm, +1, size(x))) then
-                ! No discontinuity (so no need for virtual corner) between beads circular_next to each other
-                if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), boxlen, corner)) then
-                    write(fd,'(a)') '#Virtual bead follows:'
-                    write (fd, '(es23.16,1x,es23.16)') corner%x*boxlen, corner%y*boxlen
-                end if
+                    ! No discontinuity (so no need for virtual bead at corner) between beads circular_next to each other
+                    if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), boxlen, vx, vy)) then
+                        write (fd, '(a)') '#Virtual bead follows:'
+                        write (fd, '(es23.16,1x,es23.16)') vx, vy
+                    end if
                 end if
             end if
 
@@ -176,11 +175,14 @@ contains
 
     end subroutine dump_cell_xy
 
-    ! Determine if any of the sim box corner is required to be added as a virtual bead
-    ! Returns corner in boxlen unit as an int_pair: (0,0), (0,1), (1,0), (1,1)
-    logical function need_virtual(x_lead, y_lead, x_trail, y_trail, boxlen, corner)
+    ! Determine if any of the sim box corner is required to be added as a virtual bead.
+    ! Also output the desired corner coordinates.
+    ! Takes lead and trail coordinates as well as sim box length as inputs.
+    ! Corner is the one that is on the left as we move from lead to trail along a
+    !! lead-trail joining arc anticlockwise.
+    logical function need_virtual(x_lead, y_lead, x_trail, y_trail, boxlen, corner_x, corner_y)
         double precision, intent(in) :: x_lead, y_lead, x_trail, y_trail, boxlen
-        type(int_pair), intent(out) :: corner
+        double precision, intent(out) :: corner_x, corner_y
 
         integer :: lead_axis, trail_axis ! Holds reference to the lead/trail's nearest X or Y axis
         ! Reference to the axes is defined as [1, 2, 3, 4] = [Y1, X1, Y2, X2]; e.g. 1 means Y1
@@ -188,7 +190,7 @@ contains
 
         lead_axis = minloc(dabs([x_lead, y_lead, boxlen - x_lead, boxlen - y_lead]), DIM=1)
         trail_axis = minloc(dabs([x_trail, y_trail, boxlen - x_trail, boxlen - y_trail]), DIM=1)
-        
+
         ! Ref. to X axes are even and that to Y are odd. Only odd+odd gives odd.
         need_virtual = mod(lead_axis + trail_axis, 2) /= 0
         ! True only if one of lead and trail is nearest to X and the other to Y axis.
@@ -197,15 +199,20 @@ contains
         dx = x_lead - x_trail
         dy = y_lead - y_trail
 
+        ! Determine which corner of the box is appropriate to be inserted as a virtual bead, if needed
         if (need_virtual) then
             if (dx > 0 .and. dy < 0) then
-                corner = int_pair(0, 0)
+                corner_x = 0.d0
+                corner_y = 0.d0
             else if (dx > 0 .and. dy > 0) then
-                corner = int_pair(1, 0)
+                corner_x = boxlen
+                corner_y = 0.d0
             else if (dx < 0 .and. dy > 0) then
-                corner = int_pair(1, 1)
+                corner_x = boxlen
+                corner_y = boxlen
             else
-                corner = int_pair(0, 1)
+                corner_x = 0.d0
+                corner_y = boxlen
             end if
         end if
     end function need_virtual
