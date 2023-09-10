@@ -58,7 +58,7 @@ program ccd_traj_to_xy
         call threadsafe_traj_read_xy_only(rec_index, timepoint_, x_, y_)
         frame = rec_index*traj_dump_int
         call gp_xy_dump(fname=dump_dir//dump_fname_prefix//int_to_char(frame)//dump_fname_suffix, &
-                     boxlen=box, x=x_, y=y_, title='Frame: '//int_to_char(frame))
+                        boxlen=box, x=x_, y=y_, title='Frame: '//int_to_char(frame))
         call log_this('Dumped #frame= '//int_to_char(frame))
     end do
 !$omp end parallel do

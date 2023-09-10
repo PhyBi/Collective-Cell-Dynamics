@@ -3,9 +3,6 @@
 !! at box corners) so that gnuplot can handle cells that are broken into pieces (i.e. sections) due to folding
 !! under PBC. Gnuplot should be able to produce solid fills and line plots of such cells from the datafile.
 
-! Bragging right: This module could be easily added very late into the project thanks to the extensibility
-!! offered by the code-base design and automated build mechanism.
-
 !!!!!! Glossary to understand concepts mentioned below. All w.r.t a single cell !!!!!!
 
 !**Arc : A continuous segment of the cellular periphery, comprised of consecutive beads
@@ -200,11 +197,19 @@ contains
 
     end subroutine dump_cell_xy
 
-    ! Determine if any of the sim box corner is required to be added as a virtual bead.
-    ! If one of two consecutive arcs in a section of a broken cell meets X1(X2) axis and the other arc
-    ! meets Y1(Y2) axis, the desired corner is at the intersection of the two axes.
-    ! The following function takes as input the coordinates of the two beads at the edges of the two arcs
-    ! that are nearest to the axes they seemingly meet/touch. Outputs the desired corner coordinates.
+    ! Determine if any of the sim box corner is required to be added as a virtual bead. Consider 2 cases:
+
+    ! *** Section having more than one arcs:
+    !! If one of two consecutive arcs in a section of a broken cell ends at X1(X2) axis (call its trail bead A)
+    !! and the other arc starts from Y1(Y2) axis (call its lead bead B), the desired corner is at the intersection
+    !! of the two axes.
+
+    ! *** Section having a single arc only:
+    !! If one of the edges of the arc (say A) meets X1(X2) axis and the other edge (say B) meets Y1(Y2) axis,
+    !! the desired corner is at the intersection of the two axes.
+
+    ! The following function takes as input the coordinates of A and B (order doesn't matter).
+    ! Also outputs the desired corner coordinates.
 
     logical function need_virtual(xa, ya, xb, yb, boxlen, corner_x, corner_y)
         double precision, intent(in) :: xa, ya, xb, yb, boxlen
