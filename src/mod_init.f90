@@ -6,8 +6,10 @@ contains
 
 !!! Subroutine for random initial configurations
     subroutine initial
-        double precision :: radius_l0   ! initial/seed cell radius
+        double precision :: radius_l0, radius_seed ! unstretched and initial/seed cell radius
         double precision :: mindist, mindist2 ! initial separation between cell centres to ensure non-overlap
+        ! estimates derived from box size:
+        double precision :: radius_max_est_from_box, mindist_est_from_box, mindist2_est_from_box
         double precision :: radius_eq ! equilibrium radius, achieved by force balance between spring and pressure
         double precision :: dist_eq ! equilibrium distance (centre-centre)
 
@@ -32,10 +34,8 @@ contains
         integer :: i, l
         double precision :: angle, m_tmp, mx_tmp, my_tmp, mx_cell, my_cell
 
-! Seed cell properties
+
         radius_l0 = 0.5d0*l0/dsin(pi/n) ! circumcirle of a regular n-gon with side l0
-        mindist = 2*radius_l0 + rc_rep ! rc_rep is the minimum distance between cell peripheries
-        mindist2 = mindist*mindist
 
 ! If box length is provided by user with --box=<val>, use that. Estimate otherwise.
 ! To estimate, use zero/negative stress condition where box can accommodate all equilibrium
@@ -64,6 +64,18 @@ contains
             read (argument, *) box
         end if
         deallocate (argument)
+
+! Seed cell properties: Computed as follows.
+! First estimate maximum possible radius of circular cells that can be accomodated by the box
+! Actual initial/seed radius is arithmetic mean of radius of unstretched cells and the estimated max radius
+
+        mindist2_est_from_box = box*box/(m*pi/4)
+        mindist_est_from_box = dsqrt(mindist2_est_from_box)
+        radius_max_est_from_box = (mindist_est_from_box - rc_rep)/2
+        radius_seed = (radius_l0 + radius_max_est_from_box)/2
+        mindist = 2*radius_seed + rc_rep ! rc_rep is the minimum distance between cell peripheries
+        mindist2 = mindist*mindist
+
 
 ! Seeding the first cell centre at origin
         xcell(1) = 0.d0
@@ -149,8 +161,8 @@ contains
             my_cell = my_tmp/m_tmp
             do i = 1, n
                 angle = (i - 1)*2.0d0*pi/n
-                x(i, l) = radius_l0*dcos(angle) + xcell(l)
-                y(i, l) = radius_l0*dsin(angle) + ycell(l)
+                x(i, l) = radius_seed*dcos(angle) + xcell(l)
+                y(i, l) = radius_seed*dsin(angle) + ycell(l)
                 mx(i, l) = mx_cell
                 my(i, l) = my_cell
             end do
