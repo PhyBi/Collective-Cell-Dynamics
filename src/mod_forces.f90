@@ -116,8 +116,9 @@ contains
         use ring_nb, only: assert_are_nb_rings, init_ring_nb
 
         logical, intent(in) :: store_ring_nb ! flag to store ring-ring neighborhood info
-        integer :: i, j, l, q
+        integer :: i, j, l, q, dia_opp_i, dia_opp_j
         double precision :: r, frepx, frepy, dx, dy, fadhx, fadhy, factor
+        double precision :: dia_dot_dr, dia_opp_x, dia_opp_y
         integer :: icell, jcell, nabor
         integer :: bead_index, other_bead_index
 
@@ -136,6 +137,7 @@ contains
 
 !$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index) &
 !$omp private(other_bead_index) &
+!$omp private(dia_opp_i, dia_opp_j, dia_opp_x, dia_opp_y, dia_dot_dr) &
 !$omp reduction(+: f_rpx, f_rpy) &
 !$omp reduction(+: f_adx, f_ady)
         grids: do icell = 1, ncell
@@ -174,9 +176,17 @@ contains
                                 if (store_ring_nb) call assert_are_nb_rings(l, q)
 
                                 if (r .lt. rc_rep) then ! Repulsion
+                                    dia_opp_i = circular_next(i, +n/2, n) ! Serial of bead diametrically opposite to i
+                                    dia_opp_j = circular_next(j, +n/2, n)
+                                    
+                                    dia_opp_x = x(dia_opp_j, q) - x(dia_opp_i, l)
+                                    dia_opp_y = y(dia_opp_j, q) - y(dia_opp_i, l)
+                                    
+                                    dia_dot_dr = dia_opp_x*dx + dia_opp_y*dy
+                                    
                                     factor = k_rep*(r - rc_rep)/r
-                                    frepx = factor*dx
-                                    frepy = factor*dy
+                                    frepx = sign(dia_dot_dr, factor*dx)
+                                    frepy = sign(dia_dot_dr, factor*dy)
 
                                     f_rpx(i, l) = f_rpx(i, l) + frepx
                                     f_rpx(j, q) = f_rpx(j, q) - frepx
