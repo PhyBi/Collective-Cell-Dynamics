@@ -165,9 +165,10 @@ contains
                             q = (other_bead_index - 1)/n + 1 ! Ring index of other bead
                             j = mod((other_bead_index - 1), n) + 1 ! Intraring serial number of other bead
 
+                            ! Get position vector joining images of i and j that are nearest to each other
                             dx = x(j, q) - x(i, l)
                             dy = y(j, q) - y(i, l)
-                            dx = dx - box*nint(dx/box)
+                            dx = dx - box*nint(dx/box) ! Folding w.r.t PBC (minimum image convention)
                             dy = dy - box*nint(dy/box)
                             r = hypot(dx, dy)
 
@@ -179,16 +180,21 @@ contains
                                     dia_opp_i = circular_next(i, +n/2, n) ! Serial of bead diametrically opposite to i
                                     dia_opp_j = circular_next(j, +n/2, n)
 
+                                    ! Get position vector joining nearest images of dia_opp_i and dia_opp_j
                                     dia_opp_x = x(dia_opp_j, q) - x(dia_opp_i, l)
                                     dia_opp_y = y(dia_opp_j, q) - y(dia_opp_i, l)
-                                    dia_opp_x = dia_opp_x - box*nint(dia_opp_x/box) ! Folding w.r.t PBC
+                                    dia_opp_x = dia_opp_x - box*nint(dia_opp_x/box) ! Folding w.r.t PBC (just as in dx)
                                     dia_opp_y = dia_opp_y - box*nint(dia_opp_y/box)
 
+                                    ! i-j joining position vector [dx,dy] makes obtuse angle with the position vector
+                                    !! joining dia_opp_i-dia_opp_j only when i and j penetrate each other's cell/ring.
+                                    !! Sign of the following dot_product thus indicates cell-cell overlap, if any.
                                     dia_dot_dr = dia_opp_x*dx + dia_opp_y*dy
 
-                                    if (dia_dot_dr > 0) then
+                                    ! bead-bead repulsion saturates as the beads penetrate each other's cell/ring
+                                    if (dia_dot_dr > 0) then ! no-overlap between rings
                                         factor = k_rep*(r - rc_rep)/r
-                                    else
+                                    else ! ring-ring overlap is there
                                         factor = k_rep*rc_rep/r
                                     end if
 
