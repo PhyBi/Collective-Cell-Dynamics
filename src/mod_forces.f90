@@ -181,6 +181,8 @@ contains
                                     
                                     dia_opp_x = x(dia_opp_j, q) - x(dia_opp_i, l)
                                     dia_opp_y = y(dia_opp_j, q) - y(dia_opp_i, l)
+                                    dia_opp_x = dia_opp_x - box*nint(dia_opp_x/box) ! Folding w.r.t PBC
+                                    dia_opp_y = dia_opp_y - box*nint(dia_opp_y/box)
                                     
                                     dia_dot_dr = dia_opp_x*dx + dia_opp_y*dy
                                     
