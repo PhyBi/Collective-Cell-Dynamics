@@ -178,17 +178,22 @@ contains
                                 if (r .lt. rc_rep) then ! Repulsion
                                     dia_opp_i = circular_next(i, +n/2, n) ! Serial of bead diametrically opposite to i
                                     dia_opp_j = circular_next(j, +n/2, n)
-                                    
+
                                     dia_opp_x = x(dia_opp_j, q) - x(dia_opp_i, l)
                                     dia_opp_y = y(dia_opp_j, q) - y(dia_opp_i, l)
                                     dia_opp_x = dia_opp_x - box*nint(dia_opp_x/box) ! Folding w.r.t PBC
                                     dia_opp_y = dia_opp_y - box*nint(dia_opp_y/box)
-                                    
+
                                     dia_dot_dr = dia_opp_x*dx + dia_opp_y*dy
-                                    
-                                    factor = k_rep*(r - rc_rep)/r
-                                    frepx = sign(dia_dot_dr, factor*dx)
-                                    frepy = sign(dia_dot_dr, factor*dy)
+
+                                    if (dia_dot_dr > 0) then
+                                        factor = k_rep*(r - rc_rep)/r
+                                    else
+                                        factor = k_rep*rc_rep/r
+                                    end if
+
+                                    frepx = factor*dx
+                                    frepy = factor*dy
 
                                     f_rpx(i, l) = f_rpx(i, l) + frepx
                                     f_rpx(j, q) = f_rpx(j, q) - frepx
