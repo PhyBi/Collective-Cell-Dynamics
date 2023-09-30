@@ -37,6 +37,11 @@ contains
 
                 l2 = hypot(dx2, dy2)
 
+                ! The following check makes sure no bead can cross a bond in another cell without
+                !! interacting with its beads
+                ! Because cells are circular, checking one bond per bead as follows suffices
+                if (l1 > 2*rc_rep) error stop 'Fatal: Bond length > 2*rc_rep [force_pl]'
+
                 fx(i, l) = k*((l1 - l0)*dx1/l1 - (l2 - l0)*dx2/l2) &
                            - 0.5d0*p*(dy1 + dy2)
 
@@ -85,6 +90,11 @@ contains
                 l1 = hypot(dx1, dy1)
 
                 l2 = hypot(dx2, dy2)
+
+                ! The following check makes sure no bead can cross a bond in another cell without
+                !! interacting with its beads
+                ! Because cells are circular, checking one bond per bead as follows suffices
+                if (l1 > 2*rc_rep) error stop 'Fatal: Bond length > 2*rc_rep [force_pl0]'
 
                 f_bead_x(i) = k*((l1 - l0)*dx1/l1 - (l2 - l0)*dx2/l2) &
                               - 0.5d0*p*l0*(dy1/l1 + dy2/l2)
@@ -197,6 +207,8 @@ contains
                                     else ! ring-ring overlap is there
                                         factor = k_rep*rc_rep/r
                                     end if
+
+                                    !TODO: Replace diametrically opposite bead with the cm of the respective cell
 
                                     frepx = factor*dx
                                     frepy = factor*dy
