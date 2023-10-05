@@ -44,8 +44,8 @@ contains
                            + 0.5d0*p*(dx1 + dx2)
             end do
             
-            cmx(l) = sum(x(:,l))/m
-            cmy(l) = sum(y(:,l))/m
+            cmx(l) = sum(x(:,l))/n
+            cmy(l) = sum(y(:,l))/n
         end do
 !$omp end do nowait
 
@@ -106,8 +106,8 @@ contains
             fx(:, l) = f_bead_x(:) - f_bead_x_avg ! Because total intra force for any cell/ring must be zero
             fy(:, l) = f_bead_y(:) - f_bead_y_avg ! e.g. a live amoeba in vacuum can have no net movement
 
-            cmx(l) = sum(x(:,l))/m
-            cmy(l) = sum(y(:,l))/m
+            cmx(l) = sum(x(:,l))/n
+            cmy(l) = sum(y(:,l))/n
         end do
 !$omp end do nowait
 
