@@ -195,6 +195,8 @@ contains
                                     !! joining the com's [cm_dx,cm_dy] only when i and j penetrate each other's cell.
                                     !! Negativity of the following dot_product thus indicates cell-cell overlap.
                                     overlap = (cm_dx*dx + cm_dy*dy)/(r*cm_d) ! Normalized by division
+                                    !TODO: Consider replacing r with rc_rep above. Overlap metric becomes projection
+                                    !! of bead-bead distance along centre-centre joining line, scaled by rc_rep 
                                     
                                     factor = k_rep*(r - rc_rep)/r
                                     frepx = factor*dx
