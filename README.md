@@ -144,8 +144,8 @@ This software is built from a monolithic legacy code. Hence much had and still w
 - [x] building the cell-cell neighborlist and dumping it in trajectory file in the most compressed way for later analysis such as hexatic order parameter
 - [x] current initialization works only for the hardcoded system size. The fix (which would also make the system size assignable by the user) is ready for deployment but can only come after the neighborlist fix.
 - [x] consistency check for parameters while reading them in (src/mod_parameters.f90)
-- [ ] linting
-- [ ] performance oriented profiling and polishing
+- [x] linting
+- [x] performance oriented profiling and polishing
 - [x] enhancing the driver code (`ccd`) as well as the bash-completion script
 - [x] compression and archiving of run results (trajectory etc.). Also provide retrieval and garbage cleaning tools.
 - [x] include -h\|--help for each subcommand using `helpdoc` tool. Detailed [docs](docs/)
