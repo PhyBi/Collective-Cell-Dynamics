@@ -1,5 +1,6 @@
 ! Help:Begin
-! NOTE: This program requires the metadata, last checkpoint and trajectory. Outputs analysis dump.
+! NOTE: This program requires the metadata, last checkpoint and trajectory. Outputs datafile heatmap.xy containing
+! x y coordinates along with some data z for each coordinate. One can visualize z as heatmap using `ccd visual -z:`
 ! Usage: ccd_heatmap --record=<recnum> <metadata file path>
 ! --record : Pass record number to work with. Assume last proper record if not provided.
 ! Help:End
@@ -8,7 +9,7 @@ program ccd_heatmap
     use utilities, only: cmd_line_opt, cmd_line_arg, help_handler
     use parameters, only: m, n, assign_params
     use state_vars
-    use files, only: traj_read, cpt_read, open_traj
+    use files, only: traj_read, cpt_read, open_traj, err_fd
     use gnuplot, only: gp_xy_dump
     use analysis, only: nbeads_per_ring, cell_vicsekop
     implicit none
@@ -49,6 +50,7 @@ program ccd_heatmap
     else
         rec_index = recnum
     end if
+    write(err_fd,'(a,1x,i0)') 'Using record number:', rec_index
 
     call traj_read(rec_index, timepoint)
     

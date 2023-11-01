@@ -109,6 +109,9 @@ ccd -p '<parameterA>=<valueA>' -p '<parameterB>=<valueB>' show_params
 ### Quotes
 To turn off the GROMACS-like quotes at the end of each command, set the `CCD_NO_QUOTES` enviroment variable. Do so if you mostly use `ccd` when offline.
 
+### Extensibility
+User can put her own routines (source code and scripts) in the [custom](/custom/) directory, provided the main sources and executable scripts are named as `ccd_<subcmd>.f90` and `ccd_<subcmd>` respectively.
+
 # Note
 If met with segmentation faults or stack-smashing error, make the stack size unlimited in the Bash session with `ulimit -s unlimited; export OMP_STACKSIZE=500m`.
 If the problem persists, rebuild with `make DEBUG=set` and report @ [issue](https://github.com/PhyBi/Collective-Cell-Dynamics/issues).
