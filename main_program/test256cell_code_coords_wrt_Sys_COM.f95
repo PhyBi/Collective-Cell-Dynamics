@@ -1,5 +1,6 @@
+!! Main program engine along with the various modules and subroutines !!
 
-
+!! The modules !!
        module parameters
 
        implicit none
@@ -63,7 +64,7 @@
        end module list_arrays
 
 
-        program many_cell       ! Main Program Starts
+        program many_cell       ! The Main Program engine starts here 
 
 	use parameters
 	use position_arrays
@@ -76,7 +77,7 @@
 	Character(len=len('With_Noise/Coords_shift_wrt_SysCom/Adhesions/Diff_noise_var/Var0.2/Kadh20/Ensmbls_for_alpha2/')) &
 	& ::filepath
 
-	filepath = 'With_Noise/Coords_shift_wrt_SysCom/Adhesions/Diff_noise_var/vo0.05_var0.05/'
+	filepath = ''
 	
 	! open(14,file='Grid1.5_P2.5/Fin_5_10_4_highadh9_2.0_dt0.005_krep100_cnf_5.dat',status='unknown')
 	 open(16,file=trim(adjustl(filepath))//'adh0.001_1.5_Noise(var0.05_v_0.05)P2.5_Kspr120_ite_1E7_cnf_2.dat',&
@@ -86,11 +87,11 @@
 
 
         call cpu_time(ti)
-	r=1.0d0
-	dt=0.001d0
+	r=1.0d0 !! The initial radius of the cells is taken as 1.0
+	dt=0.001d0 !! Integration timestep
 	jf=10050000  !! No. of Iterations
-	!jf=1
-	call initial(r)   
+	
+	call initial(r)   !! Initialisation of the system
           do l=1,M  
             do i=1,N
            
@@ -102,7 +103,8 @@
 	call maps
         call initial_angle
 	!write(*,*)'No. of boxes',ncell
-	do j1=1,jf
+ 
+	do j1=1,jf  !! Main integration loop over iterations
 
 	if(mod(j1,1).eq.0) then  !! Step to calculate all the coordinates w.r.t. System COM.
 	sys_xcm = 0.0d0
@@ -119,20 +121,20 @@
  	y = y - sys_ycm
 	end if
 
-        call links(j1,jf)
-	call force(j1)
-	call interaction(j1,frepx,frepy,dx,dy,rint,icell,jcell,l)
+        call links(j1,jf)  !! making the link-list
+	call force(j1)     !! intracellular force calculation 
+	call interaction(j1,frepx,frepy,dx,dy,rint,icell,jcell,l) !! intercellular force calculation
 
 	if(j1.gt.50000) then
 							
-	call move_noise(dt)
+	call move_noise(dt)   !! integration step (in presence of self propulsion and noise)
 
         if(mod(j1,5000).eq.0) then
 
           do l=1,M  
             do i=1,N
            
-               write(16,*)j1-50000,l,i,x(l,i),y(l,i)
+               write(16,*)j1-50000,l,i,x(l,i),y(l,i)   !! data writing step
                 
             end do
           end do
@@ -141,7 +143,7 @@
 
 	else
 
-	call move_deterministic(dt)
+	call move_deterministic(dt)  !! integration step (in absence of self propulsion and noise)
 
         if(j1.eq.50000) then
 
@@ -163,7 +165,7 @@
             do i=1,N        
 				   !x(l,i) = x(l,i) - box*floor(x(l,i)/box)
 				   !y(l,i) = y(l,i) - box*floor(y(l,i)/box)
-                !write(18,*)j1,l,i,x(l,i),y(l,i)	              
+                !write(18,*)j1,l,i,x(l,i),y(l,i)	!! Final configuration writing step              
             end do
           end do
        end if
@@ -174,10 +176,10 @@
 
 	write(*,*)'time=',tf-ti
 
-        end program many_cell       ! Main Program Ends
+        end program many_cell       ! Main Program engine ends
 
 
-	!!*** Subroutine to set up the cells and to make the list of neighbouring cells through PBC ***!!
+	!!*** Subroutine to set up the cells and to make the list of neighboring cells through PBC ***!!
 	subroutine maps
 
         use map_arrays
