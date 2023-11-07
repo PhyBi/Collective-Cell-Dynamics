@@ -9,7 +9,7 @@ module analysis
     implicit none
     integer :: nrings, nbeads_per_ring
     double precision, dimension(:), allocatable :: init_xcm, init_ycm
-    double precision :: init_sys_xcm, init_sys_ycm
+    double precision :: init_sys_xcm, init_sys_ycm, bead_area
     character(len=*), parameter :: analysis_dump_fname = 'analysis.txt'
     integer :: analysis_dump_fd
 
@@ -30,6 +30,9 @@ contains
         ! Set nrings and nbeads_per_ring info for all other analysis routines to use
         nrings = size(x, 2)
         nbeads_per_ring = size(x, 1)
+        
+        ! Area of all the beads (excluded volume) not taken into account by cell_perimetry().
+        bead_area = nrings*nbeads_per_ring*0.5d0*dacos(-1.d0)*rc_rep*rc_rep
 
         allocate (init_xcm(nrings), init_ycm(nrings))
 

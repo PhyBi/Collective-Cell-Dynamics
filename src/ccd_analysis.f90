@@ -84,7 +84,7 @@ program ccd_analysis
         alpha2 = alpha2*nrings/(2*msd*msd) - 1.d0
         msd = msd/nrings
         shapeind = shapeind/nrings
-        areafrac = sum_area/(box*box)
+        areafrac = (sum_area + bead_area)/(box*box)
         tension = tension/nrings
         vicsekop = hypot(vicsekop_x/nrings, vicsekop_y/nrings)
         nemop = 2*(nemop/nrings) - 1.d0
