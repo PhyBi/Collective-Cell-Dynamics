@@ -18,7 +18,8 @@ program ccd_heatmap
     integer :: metadata_fname_length, opt_arg_len, exitcode
     integer:: rec_index, ring
     double precision, dimension(:, :), allocatable :: z ! Stores the variable for heatmap
-    double precision :: vopx, vopy
+    double precision, dimension(:), allocatable :: cell_vopx, cell_vopy
+    double precision :: vopx, vopy, vop_norm
     integer :: pending_steps, current_step
     character(len=40) :: params_hash
 
@@ -35,7 +36,7 @@ program ccd_heatmap
 
     call cpt_read(timepoint, recnum, pending_steps, current_step, params_hash)
     
-    allocate(z(n,m))
+    allocate(z(n,m), cell_vopx(m), cell_vopy(m))
     
     call open_traj('read', 'old')
 
@@ -57,8 +58,20 @@ program ccd_heatmap
     nbeads_per_ring = n
     do ring = 1,m
         call cell_vicsekop(ring, vopx, vopy)
-        z(:, ring) = vopx
+        cell_vopx(ring) = vopx
+        cell_vopy(ring) = vopy
     end do
 
+    ! Unit vector along global vicsek order:
+    vopx = sum(cell_vopx)
+    vopy = sum(cell_vopy)
+    vop_norm = hypot(vopx, vopy)
+    vopx = vopx/vop_norm
+    vopy = vopy/vop_norm
+    
+    ! z is projection of local flocking direction (vicsek o.p.) along global flocking direction
+    do ring = 1,m
+        z(:,ring) = cell_vopx(ring)*vopx + cell_vopy(ring)*vopy
+    end do
     call gp_xy_dump('heatmap.xy', box, x, y, z)
 end program ccd_heatmap
