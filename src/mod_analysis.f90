@@ -32,7 +32,7 @@ contains
         nbeads_per_ring = size(x, 1)
         
         ! Area of all the beads (excluded volume) not taken into account by cell_perimetry().
-        bead_area = nrings*nbeads_per_ring*0.5d0*dacos(-1.d0)*rc_rep*rc_rep
+        bead_area = (nrings*nbeads_per_ring)*0.5d0*(dacos(-1.d0)*rc_rep*rc_rep/4)
 
         allocate (init_xcm(nrings), init_ycm(nrings))
 
