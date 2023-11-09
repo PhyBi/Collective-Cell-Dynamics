@@ -1,3 +1,6 @@
+! This is a sample for generating heatmaps. Here we have used cell_vicsekop from module analysis.
+!! For generating other heatmaps, you may edit this sample calling cell_* procedure(s) from module analysis.
+
 ! Help:Begin
 ! NOTE: This program requires the metadata, last checkpoint and trajectory. Outputs datafile heatmap.xy containing
 ! x y coordinates along with some data z for each coordinate. One can visualize z as heatmap using `ccd visual -z:`
@@ -7,11 +10,11 @@
 
 program ccd_heatmap
     use utilities, only: cmd_line_opt, cmd_line_arg, help_handler
-    use parameters, only: m, n, assign_params
+    use parameters, only: m, n, c, Vo, assign_params
     use state_vars
     use files, only: traj_read, cpt_read, open_traj, err_fd
     use gnuplot, only: gp_xy_dump
-    use analysis, only: nbeads_per_ring, cell_vicsekop
+    use analysis, only: cell_vicsekop
     implicit none
 
     character(len=:), allocatable :: metadata_fname, opt_arg
@@ -55,9 +58,8 @@ program ccd_heatmap
 
     call traj_read(rec_index, timepoint)
     
-    nbeads_per_ring = n
     do ring = 1,m
-        call cell_vicsekop(ring, vopx, vopy)
+        call cell_vicsekop(ring, c, Vo, vopx, vopy)
         cell_vopx(ring) = vopx
         cell_vopy(ring) = vopy
     end do

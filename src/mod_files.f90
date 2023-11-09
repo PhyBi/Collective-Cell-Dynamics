@@ -42,12 +42,15 @@ contains
         if (io_stat /= 0) error stop 'Fatal: Problem with opening '//traj_fname
     end subroutine open_traj
 
-    subroutine traj_read(recnum, timepoint)
+    ! The optional boolean arg `cmframe` asks traj_read to pass coordinates in com frame. Default: .false.
+    subroutine traj_read(recnum, timepoint, cmframe)
         use ring_nb, only: unpack_ring_nb
         integer, intent(in) :: recnum
+        logical, intent(in), optional :: cmframe
         real, intent(out) :: timepoint
-        integer :: io_stat
+        integer :: io_stat, ring, nbeads_per_cell, ncells
         double precision, dimension(size(mx, 1), size(mx, 2)) :: m_norm
+        double precision :: gcmx, gcmy ! Global centre of mass
 
         read (traj_fd, asynchronous='no', rec=recnum, iostat=io_stat) &
             timepoint, compressed_fp_for_io, ring_nb_io
@@ -65,10 +68,27 @@ contains
         f_rpy = dble(compressed_fp_for_io(:, :, 8))
         f_adx = dble(compressed_fp_for_io(:, :, 9))
         f_ady = dble(compressed_fp_for_io(:, :, 10))
+        
+        nbeads_per_cell = size(x, 1)
+        ncells = size(x, 2)
+        
+        do ring = 1, ncells
+            cmx(ring) = sum(x(:, ring))/nbeads_per_cell
+            cmy(ring) = sum(y(:, ring))/nbeads_per_cell
+        end do
 
         m_norm = hypot(mx, my)
         mx = mx/m_norm
         my = my/m_norm
+        
+        if (present(cmframe) .and. cmframe) then
+            gcmx = sum(cmx)/ncells
+            gcmy = sum(cmy)/ncells
+            x = x - gcmx
+            y = y - gcmy
+            cmx = cmx - gcmx
+            cmy = cmy - gcmy
+        end if
     end subroutine traj_read
 
     ! Reads only x,y info from trajectory in threadsafe manner
