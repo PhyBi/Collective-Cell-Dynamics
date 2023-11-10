@@ -16,7 +16,6 @@ program ccd_run
     use grid_linked_list
     use forces
     use integrator
-    use ring_nb, only: init_ring_nb
 
     implicit none
 

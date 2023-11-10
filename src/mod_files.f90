@@ -109,7 +109,7 @@ contains
     end subroutine threadsafe_traj_read_xy_only
 
     subroutine traj_write(recnum, timepoint)
-        use ring_nb, only: pack_ring_nb, init_ring_nb
+        use ring_nb, only: pack_ring_nb
         integer, intent(in) :: recnum
         real, intent(in) :: timepoint
         integer :: io_stat
