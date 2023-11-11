@@ -1,4 +1,4 @@
-! This is a sample for generating heatmaps. Here we have used cell_vicsekop from module analysis.
+!Brief: This is a sample for generating heatmaps. Here we have used cell_vicsekop from module analysis.
 !! For generating other heatmaps, you may edit this sample calling cell_* procedure(s) from module analysis.
 
 ! Help:Begin

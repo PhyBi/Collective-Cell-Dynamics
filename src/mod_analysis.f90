@@ -161,10 +161,10 @@ contains
     ! Due to triangle law of complex numbers hexop1 and hexop2 may differ a lot.
     ! hexop1 seems more acceptable to us.
     subroutine psi_6(nrings, hexop1, hexop2)
-        use ring_nb, only: are_nb_rings
+        use ring_nb, only: index_to_pair, ring_nb_io
         integer, intent(in) :: nrings ! Number of rings/cells
         double precision, intent(out) :: hexop1, hexop2
-        integer :: ring1, ring2 ! ring/cell index
+        integer :: i, valu, ring1, ring2
         double precision :: re, im, xcm_ring1, ycm_ring1, xcm_ring2, ycm_ring2
         complex, dimension(nrings) :: hop_z_sum ! Stores the complex sum for every cell/ring
         integer, dimension(nrings) :: num_nb ! Number of nearest neighbors
@@ -173,22 +173,23 @@ contains
         hop_z_sum = (0.0, 0.0)
         num_nb = 0
 
-        do ring1 = 1, nrings - 1
+        ! Looping over neighboring pairs, i.e. elements of ring_nb_io, is faster than loop over all possible pairs
+        !! and asking if they are are_nb_rings()
+        do i = 1, size(ring_nb_io)
+            valu = ring_nb_io(i)
+            if (valu == 0) exit
+            call index_to_pair(valu, ring1, ring2)
             xcm_ring1 = cmx(ring1)
             ycm_ring1 = cmy(ring1)
-            do ring2 = ring1 + 1, nrings
-                if (are_nb_rings(ring1, ring2)) then
-                    xcm_ring2 = cmx(ring2)
-                    ycm_ring2 = cmy(ring2)
-                    re = xcm_ring2 - xcm_ring1
+            xcm_ring2 = cmx(ring2)
+            ycm_ring2 = cmy(ring2)
+            re = xcm_ring2 - xcm_ring1
                     im = ycm_ring2 - ycm_ring1
                     z = cmplx(re, im)**6; z = z/abs(z) ! gives e(i6theta)
                     hop_z_sum(ring1) = hop_z_sum(ring1) + z
                     num_nb(ring1) = num_nb(ring1) + 1
                     hop_z_sum(ring2) = hop_z_sum(ring2) + conjg(z)
                     num_nb(ring2) = num_nb(ring2) + 1
-                end if
-            end do
         end do
 
         hexop1 = sum(abs(hop_z_sum/num_nb))/nrings
