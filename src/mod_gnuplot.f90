@@ -27,7 +27,7 @@ module gnuplot
     implicit none
     private ! Most of the things here are only for the use of the public components below
 
-    public :: gp_xy_dump
+    public :: gp_xy_dump, dump_cell_xy
 
     ! Type containing an integer pair or 2-tuple
     type int_pair
