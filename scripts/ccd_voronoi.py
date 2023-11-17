@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-# Creates Periodic Voronoi tesellations from a given set of points
+# Brief: Creates Periodic Voronoi tesellations from a given set of points. Stdout: neighboring pairs
 # This uses the Python module Freud, which in turn uses Voro++. Freud is multithreaded.
 # Usage: ccd_voronoi.py <box> <pts_in_file_path> <cells_out_file_path>
+# <pts_in_file_path> : Path to input file containing xy coordinate data of the point set.
+# <cells_out_file_path> : Path to output file containing xy data of the vertices of Voronoi cells (polytopes).
+# Note: Vertices are output in unwrapped form (i.e. some may lie outside the box)
+# Note: This script is to be called from within mod_voronoi. Check it out for details on the API.
 
 import sys
 import numpy as np
