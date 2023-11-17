@@ -25,7 +25,7 @@
 
 module gnuplot
     implicit none
-    private ! Most of the things here are only for the use of the public components below
+    private ! Most of the things here are only for use by the public components below
 
     public :: gp_xy_dump, dump_cell_xy
 
@@ -119,6 +119,7 @@ contains
         double precision, intent(in) :: boxlen
         double precision, dimension(:), intent(in) :: x, y
         double precision, dimension(:), intent(in), optional :: z
+        double precision, dimension(size(x)) :: xf, yf ! Hold FOLDED x and y
 
         ! There can be at most 4 sections corresponding to the 4 sim boxes that meet at a corner.
         type(cell_section), dimension(4) :: secs
@@ -139,6 +140,9 @@ contains
         ! Looping over beads in ascending order
         cell_beads: do i = 1, size(x)
             sec_sig = int_pair(floor(x(i)/boxlen), floor(y(i)/boxlen))
+            xf(i) = x(i) - sec_sig%x*boxlen
+            yf(i) = y(i) - sec_sig%y*boxlen
+
             if (last_sec > 0) then
                 if (sec_sig == secs(last_sec)%sig) then
                     current_arc%trail = i
@@ -183,21 +187,17 @@ contains
 
                 ! Dump virtual bead at a sim box corner if needed
                 inter_arc_virtual: if (last_extrm /= 0) then
-                    if (need_virtual(x(last_extrm), y(last_extrm), x(current_arc%trail), y(current_arc%trail), &
-                                     boxlen, vx, vy)) then
-                        write (fd, '(a)') '#Virtual bead follows:'
-                        write (fd, '(es23.16,1x,es23.16)') vx, vy
-                    end if
+                    call dump_virtual(fd, xf, yf, boxlen, last_extrm, current_arc%trail)
                 end if inter_arc_virtual
 
                 ! Dump folded XY coordinates, along with Z if provided, for the beads on the arc
                 arc_beads: do i = current_arc%trail, current_arc%lead, -1 ! Note trail and lead have been swapped
                     if (present(z)) then
                         write (fd, '(3(es23.16,1x),i0)') &
-                            x(i) - sec_sig%x*boxlen, y(i) - sec_sig%y*boxlen, z(i), i
+                            xf(i), yf(i), z(i), i
                     else
                         write (fd, '(2(es23.16,1x),i0)') &
-                            x(i) - sec_sig%x*boxlen, y(i) - sec_sig%y*boxlen, i
+                            xf(i), yf(i), i
                     end if
                 end do arc_beads
 
@@ -209,10 +209,7 @@ contains
             section_virtual: if (nsecs > 1) then ! Doesn't need virtual bead for unbroken cells (i.e. nsecs = 1)
                 if (last_extrm /= circular_next(sec_extrm, +1, size(x))) then
                     ! No discontinuity (no need for virtual bead at corner) between beads circular_next to each other
-                    if (need_virtual(x(last_extrm), y(last_extrm), x(sec_extrm), y(sec_extrm), boxlen, vx, vy)) then
-                        write (fd, '(a)') '#Virtual bead follows:'
-                        write (fd, '(es23.16,1x,es23.16)') vx, vy
-                    end if
+                    call dump_virtual(fd, xf, yf, boxlen, last_extrm, sec_extrm)
                 end if
             end if section_virtual
 
@@ -233,34 +230,26 @@ contains
     !! If one of the edges of the arc (say A) meets X1(X2) axis and the other edge (say B) meets Y1(Y2) axis,
     !! the desired corner is at the intersection of the two axes.
 
-    ! The following function takes as input the coordinates of A and B (order doesn't matter).
+    ! The following function takes as input FOLDED coordinates of A and B (order doesn't matter).
     ! Also outputs the desired corner coordinates.
 
-    logical function need_virtual(xa, ya, xb, yb, boxlen, corner_x, corner_y)
+    logical function need_virtual_corner(xa, ya, xb, yb, boxlen, corner_x, corner_y)
         double precision, intent(in) :: xa, ya, xb, yb, boxlen
         double precision, intent(out) :: corner_x, corner_y
-
-        double precision :: xa_fold, ya_fold, xb_fold, yb_fold
         integer :: a_axis, b_axis ! Holds reference to the bead a(b)'s nearest X or Y axis
         ! Reference to the axes is defined as [1, 2, 3, 4] = [Y1, X1, Y2, X2]; e.g. 1 means Y1
         integer :: corner_sig ! Holds unique signature of the desired corner
 
-        ! Fold the input coordinates
-        xa_fold = modulo(xa, boxlen)
-        ya_fold = modulo(ya, boxlen)
-        xb_fold = modulo(xb, boxlen)
-        yb_fold = modulo(yb, boxlen)
-
-        a_axis = minloc(dabs([xa_fold, ya_fold, boxlen - xa_fold, boxlen - ya_fold]), DIM=1)
-        b_axis = minloc(dabs([xb_fold, yb_fold, boxlen - xb_fold, boxlen - yb_fold]), DIM=1)
+        a_axis = minloc([xa, ya, boxlen - xa, boxlen - ya], DIM=1)
+        b_axis = minloc([xb, yb, boxlen - xb, boxlen - yb], DIM=1)
 
         ! Ref. to X axes are even and that to Y are odd. Only even+odd gives odd, not odd+odd or even+even.
-        need_virtual = mod(a_axis + b_axis, 2) /= 0
+        need_virtual_corner = mod(a_axis + b_axis, 2) /= 0
         ! True only if one of lead and trail is nearest to X and the other to Y axis.
         ! Otherwise, they wouldn't need virtual bead at all.
 
         ! Determine which corner of the box is appropriate to be inserted as a virtual bead, if needed
-        if (need_virtual) then
+        if (need_virtual_corner) then
 
             ! The following product gives a unique value for each of the 4 corners of sim box:
             corner_sig = a_axis*b_axis
@@ -281,7 +270,68 @@ contains
             end select get_corner
 
         end if
-    end function need_virtual
+    end function need_virtual_corner
+
+    ! Suppose A and B are consecutive vertices of a polygon. A lies within the box. But B lies outside the box.
+    !! We then need the intersection point of AB with the box edge as a virtual bead.
+    ! Takes as input FOLDED coordinates of A and B (order matters). Outputs virtual bead coordinates.
+    ! \lambda.abx + xa = bead_x ; \lambda.aby + ya = bead_y, where \lambda is a positive fraction.
+    ! One of bead_x and bead_y must be either 0 or boxlen, as bead is on an edge.
+    subroutine virtual_bead(xa, ya, xb, yb, boxlen, bead_x, bead_y)
+        double precision, intent(in) :: xa, ya, xb, yb, boxlen
+        double precision, intent(out) :: bead_x, bead_y
+        double precision :: abx, aby, lambda
+
+        ! Coordinates of AB vector
+        abx = xb - xa
+        aby = yb - ya
+        abx = abx - boxlen*nint(abx/boxlen)
+        aby = aby - boxlen*nint(aby/boxlen)
+
+        ! Assume bead_x = boxlen if abx > 0, or 0 if abx < 0
+        if (abx > 0.d0) then
+            bead_x = boxlen
+        else
+            bead_x = 0.d0
+        end if
+
+        ! Get bead_y using that assumption
+        lambda = (bead_x - xa)/abx
+        bead_y = lambda*aby + ya
+
+        if ((bead_y > boxlen) .or. (bead_y < 0.d0)) then ! Assumption must be wrong
+            ! Instead, bead_y must be boxlen if aby > 0, or 0 if aby < 0
+            if (aby > 0.d0) then
+                bead_y = boxlen
+            else
+                bead_y = 0.d0
+            end if
+            lambda = (bead_y - ya)/aby
+            bead_x = lambda*abx + xa
+        end if
+    end subroutine virtual_bead
+    
+    ! Input: Folded x,y array, boxlen and indices of beads (A and B) between which we need virtual beads
+    ! Bead A - 1 is not in same section as A, B+1 is not in same section as B.
+    subroutine dump_virtual(fd, x, y, boxlen, a, b)
+        use utilities, only: circular_next
+        integer, intent(in) :: fd, a, b
+        double precision, dimension(:), intent(in) :: x, y
+        double precision, intent(in) :: boxlen
+        integer :: a_prev, b_next
+        double precision :: avx, avy, bvx, bvy, cvx, cvy
+        
+        a_prev = circular_next(a, -1, size(x))
+        b_next = circular_next(b, +1, size(x))
+        
+        call virtual_bead(x(a), y(a), x(a_prev), y(a_prev), boxlen, avx, avy)
+        call virtual_bead(x(b), y(b), x(b_next), y(b_next), boxlen, bvx, bvy)
+        write (fd, '(a)') '#Virtual beads follow, signified by vb in bead number'
+        write (fd, '(es23.16,1x,es23.16,1x,a)') avx, avy, 'vb'
+        if (need_virtual_corner(avx, avy, bvx, bvy, boxlen, cvx, cvy)) &
+            write (fd, '(es23.16,1x,es23.16,1x,a)') cvx, cvy, 'vc'
+        write (fd, '(es23.16,1x,es23.16,1x,a)') bvx, bvy, 'vb'
+    end subroutine dump_virtual
 
     ! Defining equivalence between a pair of int_pair's
     logical elemental function int_pair_equival(val1, val2)

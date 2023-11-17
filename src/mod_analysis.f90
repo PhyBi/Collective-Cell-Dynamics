@@ -42,8 +42,8 @@ contains
         open (newunit=analysis_dump_fd, file=analysis_dump_fname, status='replace')
 
         ! Write the column headers in analysis dump file
-        write (analysis_dump_fd, '(11(a,2x))') &
-            'frame', 'time', 'msd', 'alpha2', 'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension', 'nemop'
+        write (analysis_dump_fd, '(11(a,2x))') 'frame', 'time', 'msd', 'alpha2', &
+            'shapeind', 'hexop1', 'hexop2', 'vicsekop', 'areafrac', 'tension', 'nemop'
     end subroutine setup
 
     ! Initialize
