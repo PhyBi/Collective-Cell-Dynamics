@@ -150,7 +150,7 @@ contains
         character(len=len(dir) + len('/tmp.XXXXXXXXXX')) :: mktemp
 
         call execute("mktemp -u -p "//dir, mktemp)
-    end function
+    end function mktemp
 
     ! Returns true if `flag` is present as a command line flag/option/argument
     ! Example: cmd_line_flag('--help')
