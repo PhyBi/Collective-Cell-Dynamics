@@ -86,7 +86,12 @@ program ccd_analysis
         vicsekop = hypot(vicsekop_x/nrings, vicsekop_y/nrings)
         nemop = 2*(nemop/nrings) - 1.d0
 
-        call psi_6(nrings, hexop1, hexop2)
+    ! hexop1 is from Revalee et al., J. Chem. Phys. 128, 035102 (2008); https://doi.org/10.1063/1.2825300
+    ! hexop2 is from Loewe et al., Phy. Rev. Lett. 125(3):038003, 2020
+    ! Due to triangle law of complex numbers hexop1 and hexop2 may differ a lot.
+    ! hexop1 seems more acceptable to us.
+        hexop1 = sum(abs(psi_6(nrings)))/nrings
+        hexop2 = abs(sum(psi_6(nrings)))/nrings
 
         call dump(rec_index*traj_dump_int, timepoint, &
                   msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
