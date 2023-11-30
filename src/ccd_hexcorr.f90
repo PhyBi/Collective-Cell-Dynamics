@@ -62,11 +62,11 @@ program ccd_hexcorr
         deallocate (opt_arg)
     end if
 
-    do rec_index = begin_rec, end_rec
+    timesteps: do rec_index = begin_rec, end_rec
         call traj_read(rec_index, timepoint)
         hop = psi_6(nrings)
 
-        do l = 1, nrings - 1
+        pairs: do l = 1, nrings - 1
             do q = l + 1, nrings
                 cm_dx = cmx(q) - cmx(l)
                 cm_dy = cmy(q) - cmy(l)
@@ -79,13 +79,17 @@ program ccd_hexcorr
                     h(bin) = h(bin) + 2
                 end if
             end do
-        end do
-    end do
+        end do pairs
+    end do timesteps
 
-    do bin = 1, nbins
+    bins: do bin = 1, nbins
         r = (bin - 1)*dr + dr/2 ! Mid point of bin
-        write (fd, '(es23.16,1x,es23.16)') r, g6(bin)/h(bin)
-    end do
+        if (h(bin) /= 0) then
+            write (fd, '(es23.16,1x,es23.16)') r, g6(bin)/h(bin)
+        else
+            write (fd, '(es23.16,1x,es23.16)') r, 0.d0
+        end if
+    end do bins
 
     call close_traj()
     close (fd)
