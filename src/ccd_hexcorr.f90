@@ -1,8 +1,9 @@
 ! Help:Begin
 ! Computes orientation correlation (g6) histogram. Outputs hexcorr.xy. User can optionally provide number of bins (default: 1000).
 ! NOTE: This program requires the last checkpoint too.
-! Usage: ccd_hexcorr [--records=<begin>:<end>] [<nbins>]
+! Usage: ccd_hexcorr [--records=<begin>:<end>] [--voronoi] [<nbins>]
 ! --records : Pass range of records to work with. Omit either <begin> or <end> to assume default. E.g. --records=3:4
+! --voronoi : Compute hexatic order of periodic Voronoi tesselations derived from the ring/cell centres.
 ! Help:End
 
 ! Ref: Code 8.1 in Allen and Tildesley's book "Computer Simulation of Liquids".
@@ -12,6 +13,7 @@ program ccd_hexcorr
     use files
     use utilities, only: cmd_line_opt, cmd_line_arg, int_to_char, help_handler
     use analysis, only: psi_6
+    use voronoi, only: periodic_voronoi
     implicit none
     integer :: pending_steps, current_step, rec_index, begin_rec, end_rec
     character(len=40) :: params_hash
@@ -41,7 +43,7 @@ program ccd_hexcorr
     nbeads_per_ring = size(x, 1)
     nrings = size(x, 2)
     dr = (box/2)/nbins
-    allocate (h(nbins), g6(nbins), hop(nrings))
+    allocate (h(nbins), g6(nbins))
     h = 0
     g6 = 0.d0
     open (newunit=fd, file=fname, access='sequential', form='formatted', status='replace', &
@@ -64,6 +66,7 @@ program ccd_hexcorr
 
     timesteps: do rec_index = begin_rec, end_rec
         call traj_read(rec_index, timepoint)
+        if (cmd_line_flag('--voronoi')) call periodic_voronoi(cmx, cmy, box)
         hop = psi_6(nrings)
 
         pairs: do l = 1, nrings - 1
