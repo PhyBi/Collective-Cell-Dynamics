@@ -6,7 +6,9 @@ contains
 
 !!! Subroutine for random initial configurations
     subroutine initial
-        double precision :: radius_l0   ! initial/seed cell radius
+        use voronoi, only: periodic_voronoi
+        double precision :: radius
+        double precision :: radius_l0   ! cell radius at l=l0
         double precision :: mindist, mindist2 ! initial separation between cell centres to ensure non-overlap
         double precision :: radius_eq ! equilibrium radius, achieved by force balance between spring and pressure
         double precision :: dist_eq ! equilibrium distance (centre-centre)
@@ -19,6 +21,8 @@ contains
         integer :: this, other, iter_count, fail_count
         double precision, dimension(size(x, dim=2)) :: xcell, ycell ! centre coordinates of any circular cell/ring
         double precision, dimension(size(x, dim=2)) :: xdisp, ydisp ! displacements during overlap elimination
+        double precision, dimension(size(x, dim=2)) :: dxcell, dycell, dcell2 ! cell-cell distance
+        integer :: nearest_neighbor ! index of nearest neighbor cell
         double precision :: xcell_this, ycell_this, dx, dy, dr, dr2, disp_rate
 
 ! Max trials while seeding, and max iterations while eliminating overlaps
@@ -32,10 +36,10 @@ contains
         integer :: i, l
         double precision :: angle, m_tmp, mx_tmp, my_tmp, mx_cell, my_cell
 
-! Seed cell properties
+!!! Acquire or estimate box length:
+
+! Properties of circular cells with l=l0
         radius_l0 = 0.5d0*l0/dsin(pi/n) ! circumcirle of a regular n-gon with side l0
-        mindist = 2*radius_l0 + rc_rep ! rc_rep is the minimum distance between cell peripheries
-        mindist2 = mindist*mindist
 
 ! If box length is provided by user with --box=<val>, use that. Estimate otherwise.
 ! To estimate, use zero/negative stress condition where box can accommodate all equilibrium
@@ -52,18 +56,22 @@ contains
 
 ! Equilibrium radius estimation from Spring-Pressure force balance. Based on user chosen pressure force (pl0 or pl)
             if (cmd_line_flag('--pl0')) then
-                radius_eq = (2*k*dtan(pi/n) + p)*radius_l0/(2*k*dtan(pi/n))
+                radius_eq = (2*(k - gamma/l0)*dtan(pi/n) + p)*radius_l0/(2*k*dtan(pi/n))
             else
-                radius_eq = (2*k*dtan(pi/n)*radius_l0)/(2*k*dtan(pi/n) - p)
+                radius_eq = 2*(k - gamma/l0)*dtan(pi/n)*radius_l0/(2*k*dtan(pi/n) - p)
             end if
-            if (radius_eq < 0.d0) error stop &
-                'Spring-Pressure force balance non-existent. Cannot estimate boxlength. Please provide with --box='
+            ! Criterion for stable equilibrium for --pl: 2ktan(pi/n) > p
+            if ((radius_eq < 0.d0) .or. (.not. cmd_line_flag('--pl0') .and. 2*k*dtan(pi/n) < p)) error stop &
+                'Fatal: Cannot estimate boxlength. Please provide with --box='
             dist_eq = 2*radius_eq + rc_rep
-            box = dsqrt(m*pi*dist_eq*dist_eq/4)*box_scale ! box should accommodate m equilibrium cells
+            ! box should accommodate m hexagons whose in-circles have diameter = dist_eq
+            box = dsqrt(m*6*(dist_eq*dist_eq/4)*dtan(pi/6))*box_scale
         else
             read (argument, *) box
         end if
         deallocate (argument)
+
+!!! Seed the cells now:
 
 ! Seeding the first cell centre at origin
         xcell(1) = 0.d0
@@ -71,6 +79,9 @@ contains
 
 ! Find non-overlapping centres for circular cells by random trial and error
 ! In case overlap is unavoidable even after so many trials, accept it
+        mindist = 2*radius_l0 + rc_rep ! rc_rep is the minimum distance between cell peripheries
+        mindist2 = mindist*mindist
+
         seed_cell_centres: do this = 2, m
             fail_count = 0
 
@@ -101,7 +112,15 @@ contains
         iter_count = 0 ! initial count of iterations
         overlap_elim: do
             no_overlap_found = .true.
-            if (iter_count > max_iters_emin) error stop 'Fatal: Took too many cycles for overlap elimination'
+            ! In case overlap elimintaion with centre-centre separation = rc_rep + radius_l0 fails,
+            !! go for atleast minimal steric separation, i.e. rc_rep
+            if (iter_count == max_iters_emin + 1) then
+                mindist = rc_rep
+                mindist2 = mindist*mindist
+                disp_rate = rc_rep
+            else if (iter_count > 2*max_iters_emin) then
+                error stop 'Fatal: Took too many cycles to eliminate overlap'
+            end if
             xdisp = 0.d0
             ydisp = 0.d0
 
@@ -128,7 +147,10 @@ contains
                 end do
             end do
 
-            if (no_overlap_found) exit overlap_elim
+            if (no_overlap_found) then
+                write (err_fd, '(a,1x,i0,1x,a)') 'Overlap eliminated after', iter_count, 'iterations'
+                exit overlap_elim
+            end if
 
             ! Move cell centres towards non-overlap
             xcell = xcell + xdisp
@@ -136,11 +158,31 @@ contains
 
             iter_count = iter_count + 1
         end do overlap_elim
-        write (err_fd, '(a,1x,i0,1x,a)') 'Overlap eliminated after', iter_count, 'iterations'
 
-! Construct circular cells from the seeded centres
+! Get iterative approximations to centroidal voronoi tesselation (CVT), starting from the config at hand.
+!! This evens out the cell-cell spacings with every iteration. This is Lloyd's algo for CVT.
+!! The alternative MacQueen's algo was not adopted fearing it might take too much time.
+!! Ref: https://people.math.sc.edu/Burkardt/classes/urop_2016/burns.pdf
+!TODO: Is double iteration enough?
+        call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
+        call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
+
+! Construct circular cells from the seeded centres. Cells may have different radii to fit in their centre-centre space.
 ! Also initialize the motility unit vectors randomly for each cell
         do l = 1, m
+            ! Get centre-centre distance of current cell (l) with its nearest neighbor cell.
+            !! The radius of l must be so that both cells fit in that space.
+            dxcell = xcell - xcell(l)
+            dycell = ycell - ycell(l)
+            dxcell = dxcell - box*nint(dxcell/box)
+            dycell = dycell - box*nint(dycell/box)
+            dxcell(l) = 2*box ! Anything greater than box
+            dycell(l) = 2*box ! Anything greater than box
+            dcell2 = dxcell*dxcell + dycell*dycell
+            nearest_neighbor = minloc(dcell2, dim=1)
+            radius = (dsqrt(dcell2(nearest_neighbor)) - rc_rep)/2
+            if (radius < 0) error stop 'Negative radius detected' ! Just a fail-safe
+
             call random_number(rands)
             mx_tmp = 2.0d0*rands(1) - 1.0d0
             my_tmp = 2.0d0*rands(2) - 1.0d0
@@ -149,8 +191,8 @@ contains
             my_cell = my_tmp/m_tmp
             do i = 1, n
                 angle = (i - 1)*2.0d0*pi/n
-                x(i, l) = radius_l0*dcos(angle) + xcell(l)
-                y(i, l) = radius_l0*dsin(angle) + ycell(l)
+                x(i, l) = radius*dcos(angle) + xcell(l)
+                y(i, l) = radius*dsin(angle) + ycell(l)
                 mx(i, l) = mx_cell
                 my(i, l) = my_cell
             end do
