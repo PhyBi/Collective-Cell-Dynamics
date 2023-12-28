@@ -37,10 +37,10 @@ contains
 
                 l2 = hypot(dx2, dy2)
 
-                fx(i, l) = k*((l1 - l0)*dx1/l1 - (l2 - l0)*dx2/l2) &
+                fx(i, l) = (k*(l1 - l0) + gamma)*dx1/l1 - (k*(l2 - l0) + gamma)*dx2/l2 &
                            - 0.5d0*p*(dy1 + dy2)
 
-                fy(i, l) = k*((l1 - l0)*dy1/l1 - (l2 - l0)*dy2/l2) &
+                fy(i, l) = (k*(l1 - l0) + gamma)*dy1/l1 - (k*(l2 - l0) + gamma)*dy2/l2 &
                            + 0.5d0*p*(dx1 + dx2)
             end do
 
@@ -89,12 +89,12 @@ contains
 
                 l2 = hypot(dx2, dy2)
 
-                f_bead_x(i) = k*((l1 - l0)*dx1/l1 - (l2 - l0)*dx2/l2) &
+                f_bead_x(i) = (k*(l1 - l0) + gamma)*dx1/l1 - (k*(l2 - l0) + gamma)*dx2/l2 &
                               - 0.5d0*p*l0*(dy1/l1 + dy2/l2)
 
                 f_bead_x_avg = f_bead_x_avg + f_bead_x(i)
 
-                f_bead_y(i) = k*((l1 - l0)*dy1/l1 - (l2 - l0)*dy2/l2) &
+                f_bead_y(i) = (k*(l1 - l0) + gamma)*dy1/l1 - (k*(l2 - l0) + gamma)*dy2/l2 &
                               + 0.5d0*p*l0*(dx1/l1 + dx2/l2)
 
                 f_bead_y_avg = f_bead_y_avg + f_bead_y(i)
@@ -213,9 +213,16 @@ contains
                                     f_rpy(i, l) = f_rpy(i, l) + frepy
                                     f_rpy(j, q) = f_rpy(j, q) - frepy
 
-                                else ! Adhesion
+                                else ! Adhesion (piecewise linear and continuous)
 
-                                    factor = k_adh*(rc_adh - r)/r
+                                    if (r .lt. rc_rep + (rc_adh - rc_rep)/2) then
+                                        factor = k_adh*(r - rc_rep)/r
+                                        ! Continuous with 0 repulsion at r = rc_rep
+                                    else
+                                        factor = k_adh*(rc_adh - r)/r
+                                        ! Goes to 0 at r = rc_adh
+                                    end if
+
                                     fadhx = factor*dx
                                     fadhy = factor*dy
 
