@@ -25,15 +25,15 @@ contains
         integer :: nearest_neighbor ! index of nearest neighbor cell
         double precision :: xcell_this, ycell_this, dx, dy, dr, dr2, disp_rate
 
-! Max trials while seeding, and max iterations while eliminating overlaps
-        integer, parameter :: max_trials_seed = 1000, max_iters_emin = 20000
+! Max trials while seeding, max iterations while eliminating overlaps, times CVT iterative approximations are performed
+        integer, parameter :: max_trials_seed = 1000, max_iters_emin = 20000, max_cvt_Lloyd_iters = 5
 
 ! For stability/convergence during overlap elimination, number of cycles needed for overlap elimination of any pair
         integer, parameter :: cycles_pair_nonoverlap = 100
 
         logical :: no_overlap_found
 
-        integer :: i, l
+        integer :: i, l, cvt_Lloyd_iter
         double precision :: angle, m_tmp, mx_tmp, my_tmp, mx_cell, my_cell
 
 !!! Acquire or estimate box length:
@@ -164,8 +164,9 @@ contains
 !! The alternative MacQueen's algo was not adopted fearing it might take too much time.
 !! Ref: https://people.math.sc.edu/Burkardt/classes/urop_2016/burns.pdf
 !TODO: Is double iteration enough?
-        call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
-        call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
+        do cvt_Lloyd_iter = 1, max_cvt_Lloyd_iters
+            call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
+        end do
 
 ! Construct circular cells from the seeded centres. Cells may have different radii to fit in their centre-centre space.
 ! Also initialize the motility unit vectors randomly for each cell
