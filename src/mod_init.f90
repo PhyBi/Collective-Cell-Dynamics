@@ -7,7 +7,7 @@ contains
 !!! Subroutine for random initial configurations
     subroutine initial
         use voronoi, only: periodic_voronoi
-        double precision :: radius
+        double precision :: radius, minrad
         double precision :: radius_l0   ! cell radius at l=l0
         double precision :: mindist, mindist2 ! initial separation between cell centres to ensure non-overlap
         double precision :: radius_eq ! equilibrium radius, achieved by force balance between spring and pressure
@@ -25,8 +25,10 @@ contains
         integer :: nearest_neighbor ! index of nearest neighbor cell
         double precision :: xcell_this, ycell_this, dx, dy, dr, dr2, disp_rate
 
-! Max trials while seeding, max iterations while eliminating overlaps, times CVT iterative approximations are performed
-        integer, parameter :: max_trials_seed = 1000, max_iters_emin = 20000, max_cvt_Lloyd_iters = 5
+! Max trials while seeding and max iterations while eliminating overlaps
+        integer, parameter :: max_trials_seed = 1000, max_iters_emin = 20000
+! Times CVT iterative approximations are performed
+        integer :: total_cvt_Lloyd_iters = 5
 
 ! For stability/convergence during overlap elimination, number of cycles needed for overlap elimination of any pair
         integer, parameter :: cycles_pair_nonoverlap = 100
@@ -70,6 +72,18 @@ contains
             read (argument, *) box
         end if
         deallocate (argument)
+        
+!!! Acquire or fix minimum seed/initial radius
+        call cmd_line_opt('--minrad', length=arglen)
+        if (arglen > 0) then
+            allocate (character(len=arglen) :: argument)
+            call cmd_line_opt('--minrad', argument)
+            read (argument, *) minrad
+            deallocate (argument)
+        else
+            minrad = rc_rep !TODO: Give a better default
+        end if
+        write(err_fd, '(a,1x,es23.16)') 'minrad =', minrad
 
 !!! Seed the cells now:
 
@@ -107,19 +121,15 @@ contains
             ycell(this) = ycell_this
         end do seed_cell_centres
 
-! Eliminating overlaps
+! Eliminating overlaps, as far as possible, through energy minimization
         disp_rate = mindist/cycles_pair_nonoverlap ! constant displacement per cycle
         iter_count = 0 ! initial count of iterations
         overlap_elim: do
             no_overlap_found = .true.
-            ! In case overlap elimintaion with centre-centre separation = rc_rep + radius_l0 fails,
-            !! go for atleast minimal steric separation, i.e. rc_rep
-            if (iter_count == max_iters_emin + 1) then
-                mindist = rc_rep
-                mindist2 = mindist*mindist
-                disp_rate = rc_rep
-            else if (iter_count > 2*max_iters_emin) then
-                error stop 'Fatal: Took too many cycles to eliminate overlap'
+            if (iter_count > max_iters_emin) then
+                write (err_fd, '(a,1x,i0,1x,a)') 'Overlap could not be eliminated even after', iter_count, 'iterations'
+                total_cvt_Lloyd_iters = 3*total_cvt_Lloyd_iters ! Perform more CVT approximations to compensate
+                exit overlap_elim
             end if
             xdisp = 0.d0
             ydisp = 0.d0
@@ -163,8 +173,8 @@ contains
 !! This evens out the cell-cell spacings with every iteration. This is Lloyd's algo for CVT.
 !! The alternative MacQueen's algo was not adopted fearing it might take too much time.
 !! Ref: https://people.math.sc.edu/Burkardt/classes/urop_2016/burns.pdf
-!TODO: Is double iteration enough?
-        do cvt_Lloyd_iter = 1, max_cvt_Lloyd_iters
+        write (err_fd, '(a,1x,i0,1x,a)') 'Performing', total_cvt_Lloyd_iters, 'Lloyd Centroidal Voronoi iterations'
+        do cvt_Lloyd_iter = 1, total_cvt_Lloyd_iters
             call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
         end do
 
@@ -182,7 +192,7 @@ contains
             dcell2 = dxcell*dxcell + dycell*dycell
             nearest_neighbor = minloc(dcell2, dim=1)
             radius = (dsqrt(dcell2(nearest_neighbor)) - rc_rep)/2
-            if (radius < 0) error stop 'Negative radius detected' ! Just a fail-safe
+            if (radius < minrad) error stop 'Fatal: Initial radius is smaller than minimum stipulated radius, minrad'
 
             call random_number(rands)
             mx_tmp = 2.0d0*rands(1) - 1.0d0
