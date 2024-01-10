@@ -19,6 +19,7 @@ module parameters
     double precision, protected :: dt = 0.1d0   ! Integration timestep
     integer, protected :: tau_align = 1000 ! Timescale for Vicsek alignment in multiples of dt
     integer, protected :: tau_noise = 100 ! Timescale for rotational diffusion in multiples of dt
+    integer, protected :: nrexcl = -1 ! Similar to nrexcl in gromacs. Given dummy -ve value to identify custom choice
 
     !!!! RUN LENGTH
     integer, protected :: nsamples = 100  !! No. of Iterations in terms of traj_dump_int
@@ -34,7 +35,7 @@ module parameters
 
     !! END OF USER PARAMETERS
 
-    namelist /params/ c, k, p, gamma, l0, rc_adh, rc_rep, k_adh, k_rep, tau_noise, Vo, dt, tau_align, nsamples, n, m
+    namelist /params/ c, k, p, gamma, l0, rc_adh, rc_rep, k_adh, k_rep, tau_noise, Vo, dt, tau_align, nsamples, n, m, nrexcl
     namelist /params/ traj_dump_int, status_dump_int, cpt_dump_int
     namelist /params/ ovrlp_trshld
 
@@ -55,6 +56,8 @@ contains
 
         ! If gamma isn't specified by user, use value satisfying Young-Laplace condition for regular n-gon at l=l0
         if (gamma < 0.d0) gamma = p*l0/(2*dtan(acos(-1.d0)/n))
+        ! If nrexcl isn't specified by user, use a value so that intracellular beads have no non-bonded interaction
+        if (nrexcl < 0) nrexcl = n ! i.e. exclude all the bonds in a cell
 
         if (tau_align /= 0) align_strength = 1.0d0/(tau_align*dt)
         if (tau_noise /= 0) noise_strength = 1.0d0/(tau_noise*dt)

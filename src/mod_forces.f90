@@ -127,6 +127,7 @@ contains
         double precision :: cm_d, cm_dx, cm_dy, overlap
         integer :: icell, jcell, nabor
         integer :: bead_index, other_bead_index
+        logical :: not_within_same_ring, same_ring_beyond_nrexcl
 
 !$omp do private(l)
         do l = 1, m
@@ -142,6 +143,7 @@ contains
 !$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index) &
 !$omp private(other_bead_index) &
 !$omp private(cm_d, cm_dx, cm_dy, overlap) &
+!$omp private(not_within_same_ring, same_ring_beyond_nrexcl) & 
 !$omp reduction(+: f_rpx, f_rpy) &
 !$omp reduction(+: f_adx, f_ady)
         grids: do icell = 1, ncell
@@ -162,12 +164,14 @@ contains
                     other_beads_downlist: do
                         if (other_bead_index == 0) exit other_beads_downlist
 
-                        not_within_same_ring: if ((bead_index - 1)/n /= (other_bead_index - 1)/n) then
+                        l = (bead_index - 1)/n + 1 ! Ring index of bead
+                        i = mod((bead_index - 1), n) + 1 ! Intraring serial number of bead
+                        q = (other_bead_index - 1)/n + 1 ! Ring index of other bead
+                        j = mod((other_bead_index - 1), n) + 1 ! Intraring serial number of other bead
+                        not_within_same_ring = (l /= q)
+                        same_ring_beyond_nrexcl = (l == q) .and. (min(abs(i-j), n - abs(i-j)) > nrexcl)
 
-                            l = (bead_index - 1)/n + 1 ! Ring index of bead
-                            i = mod((bead_index - 1), n) + 1 ! Intraring serial number of bead
-                            q = (other_bead_index - 1)/n + 1 ! Ring index of other bead
-                            j = mod((other_bead_index - 1), n) + 1 ! Intraring serial number of other bead
+                        non_bonded: if (not_within_same_ring .or. same_ring_beyond_nrexcl) then
 
                             ! Get position vector joining images of i and j that are nearest to each other
                             dx = x(j, q) - x(i, l)
@@ -178,7 +182,7 @@ contains
 
                             within_cutoff: if (r .lt. rc_adh) then
 
-                                if (store_ring_nb) call assert_are_nb_rings(l, q)
+                                if (not_within_same_ring .and. store_ring_nb) call assert_are_nb_rings(l, q)
 
                                 if (r .lt. rc_rep) then ! Repulsion
 
@@ -201,7 +205,7 @@ contains
                                     frepy = factor*dy
 
                                     ! In case of imminent overlap, push cells away with extra force
-                                    if (overlap < ovrlp_trshld) then
+                                    if (not_within_same_ring .and. (overlap < ovrlp_trshld)) then
                                         factor = -k_rep*rc_rep/cm_d
                                         frepx = frepx + factor*cm_dx
                                         frepy = frepy + factor*cm_dy
@@ -213,7 +217,7 @@ contains
                                     f_rpy(i, l) = f_rpy(i, l) + frepy
                                     f_rpy(j, q) = f_rpy(j, q) - frepy
 
-                                else ! Adhesion (piecewise linear and continuous)
+                                else if (not_within_same_ring) then ! Adhesion (piecewise linear and continuous)
 
                                     if (r .lt. rc_rep + (rc_adh - rc_rep)/2) then
                                         factor = k_adh*(r - rc_rep)/r
@@ -235,7 +239,7 @@ contains
                                 end if
                             end if within_cutoff
 
-                        end if not_within_same_ring
+                        end if non_bonded
 
                         other_bead_index = bead_nl_body(other_bead_index)
                     end do other_beads_downlist
