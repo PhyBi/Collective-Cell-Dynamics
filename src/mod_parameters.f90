@@ -35,9 +35,9 @@ module parameters
 
     !! END OF USER PARAMETERS
 
-    namelist /params/ c, k, p, gamma, l0, rc_adh, rc_rep, k_adh, k_rep, tau_noise, Vo, dt, tau_align, nsamples, n, m, nrexcl
+    namelist /params/ c, k, p, gamma, l0, rc_adh, rc_rep, k_adh, k_rep, tau_noise, Vo, dt, tau_align, nsamples, n, m
     namelist /params/ traj_dump_int, status_dump_int, cpt_dump_int
-    namelist /params/ ovrlp_trshld
+    namelist /params/ ovrlp_trshld, nrexcl
 
     double precision, protected :: noise_strength = 0.0d0 ! Constant coeff. (rot. diff. related) in noise term
     double precision, protected :: align_strength = 0.0d0 ! Constant coeff. in the Vicsek term

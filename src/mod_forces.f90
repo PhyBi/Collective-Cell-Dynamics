@@ -43,9 +43,9 @@ contains
 
                 fy(i, l) = (k*(l1 - l0) + gamma)*dy1/l1 - (k*(l2 - l0) + gamma)*dy2/l2 &
                            + 0.5d0*p*(dx1 + dx2)
-                
-                poten = poten + 0.5d0*(k*(l1-l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
-                    + gamma*l1
+
+                poten = poten + 0.5d0*(k*(l1 - l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
+                        + gamma*l1
             end do
 
             cmx(l) = sum(x(:, l))/n
@@ -103,9 +103,9 @@ contains
                               + 0.5d0*p*l0*(dx1/l1 + dx2/l2)
 
                 f_bead_y_avg = f_bead_y_avg + f_bead_y(i)
-                
-                poten = poten + 0.5d0*(k*(l1-l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
-                    + gamma*l1
+
+                poten = poten + 0.5d0*(k*(l1 - l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
+                        + gamma*l1
             end do
 
             f_bead_x_avg = f_bead_x_avg/n
@@ -151,7 +151,7 @@ contains
 !$omp do private(i,j,l,q, r,frepx,frepy,dx,dy,fadhx,fadhy,factor, icell,jcell,nabor, bead_index) &
 !$omp private(other_bead_index) &
 !$omp private(cm_d, cm_dx, cm_dy, overlap) &
-!$omp private(not_within_same_ring, same_ring_beyond_nrexcl) & 
+!$omp private(not_within_same_ring, same_ring_beyond_nrexcl) &
 !$omp reduction(+: f_rpx, f_rpy) &
 !$omp reduction(+: f_adx, f_ady) &
 !$omp reduction(+: poten)
@@ -178,7 +178,7 @@ contains
                         q = (other_bead_index - 1)/n + 1 ! Ring index of other bead
                         j = mod((other_bead_index - 1), n) + 1 ! Intraring serial number of other bead
                         not_within_same_ring = (l /= q)
-                        same_ring_beyond_nrexcl = (l == q) .and. (min(abs(i-j), n - abs(i-j)) > nrexcl)
+                        same_ring_beyond_nrexcl = (l == q) .and. (min(abs(i - j), n - abs(i - j)) > nrexcl)
 
                         non_bonded: if (not_within_same_ring .or. same_ring_beyond_nrexcl) then
 

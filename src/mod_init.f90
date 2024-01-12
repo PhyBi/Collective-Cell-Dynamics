@@ -72,7 +72,7 @@ contains
             read (argument, *) box
         end if
         deallocate (argument)
-        
+
 !!! Acquire or fix minimum seed/initial radius
         call cmd_line_opt('--minrad', length=arglen)
         if (arglen > 0) then
@@ -83,7 +83,7 @@ contains
         else
             minrad = rc_rep !TODO: Give a better default
         end if
-        write(err_fd, '(a,1x,es23.16)') 'minrad =', minrad
+        write (err_fd, '(a,1x,es23.16)') 'minrad =', minrad
 
 !!! Seed the cells now:
 
