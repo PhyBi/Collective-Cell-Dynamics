@@ -15,7 +15,8 @@ contains
         double precision :: l1, l2, dx1, dx2, dy1, dy2
         integer :: i_minus_1, i_plus_1
 
-!$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2, i_minus_1,i_plus_1)
+!$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2, i_minus_1,i_plus_1) &
+!$omp reduction(+: poten)
         do l = 1, m
             do i = 1, n
 
@@ -42,6 +43,9 @@ contains
 
                 fy(i, l) = (k*(l1 - l0) + gamma)*dy1/l1 - (k*(l2 - l0) + gamma)*dy2/l2 &
                            + 0.5d0*p*(dx1 + dx2)
+                
+                poten = poten + 0.5d0*(k*(l1-l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
+                    + gamma*l1
             end do
 
             cmx(l) = sum(x(:, l))/n
@@ -64,7 +68,8 @@ contains
         double precision, dimension(size(x, dim=1)) :: f_bead_x, f_bead_y
         double precision :: f_bead_x_avg, f_bead_y_avg
 
-!$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2, i_minus_1,i_plus_1, f_bead_x,f_bead_y,f_bead_x_avg,f_bead_y_avg)
+!$omp do private(i,l, l1,l2,dx1,dx2,dy1,dy2, i_minus_1,i_plus_1, f_bead_x,f_bead_y,f_bead_x_avg,f_bead_y_avg) &
+!$omp reduction(+: poten)
         do l = 1, m
             f_bead_x_avg = 0.d0
             f_bead_y_avg = 0.d0
@@ -98,6 +103,9 @@ contains
                               + 0.5d0*p*l0*(dx1/l1 + dx2/l2)
 
                 f_bead_y_avg = f_bead_y_avg + f_bead_y(i)
+                
+                poten = poten + 0.5d0*(k*(l1-l0)**2 - p*(dabs(x(i, l)*y(i_minus_1, l) - x(i_minus_1, l)*y(i, l)))) &
+                    + gamma*l1
             end do
 
             f_bead_x_avg = f_bead_x_avg/n
@@ -145,7 +153,8 @@ contains
 !$omp private(cm_d, cm_dx, cm_dy, overlap) &
 !$omp private(not_within_same_ring, same_ring_beyond_nrexcl) & 
 !$omp reduction(+: f_rpx, f_rpy) &
-!$omp reduction(+: f_adx, f_ady)
+!$omp reduction(+: f_adx, f_ady) &
+!$omp reduction(+: poten)
         grids: do icell = 1, ncell
             bead_index = bead_nl_head(icell)
 
@@ -203,6 +212,7 @@ contains
                                     factor = k_rep*(r - rc_rep)/r
                                     frepx = factor*dx
                                     frepy = factor*dy
+                                    poten = poten + 0.5d0*k_rep*(r - rc_rep)**2
 
                                     ! In case of imminent overlap, push cells away with extra force
                                     if (not_within_same_ring .and. (overlap < ovrlp_trshld)) then
@@ -222,9 +232,11 @@ contains
                                     if (r .lt. rc_rep + (rc_adh - rc_rep)/2) then
                                         factor = k_adh*(r - rc_rep)/r
                                         ! Continuous with 0 repulsion at r = rc_rep
+                                        poten = poten + 0.5d0*k_adh*(r - rc_rep)**2
                                     else
                                         factor = k_adh*(rc_adh - r)/r
                                         ! Goes to 0 at r = rc_adh
+                                        poten = poten + 0.5d0*k_adh*(rc_adh - r)**2
                                     end if
 
                                     fadhx = factor*dx

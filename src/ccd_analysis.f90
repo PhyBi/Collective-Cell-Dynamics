@@ -100,7 +100,7 @@ program ccd_analysis
         hexop2 = abs(sum(hop))/nrings
 
         call dump(rec_index*traj_dump_int, timepoint, &
-                  msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop)
+                  msd, alpha2, shapeind, hexop1, hexop2, vicsekop, areafrac, tension, nemop, poten/nrings)
     end do traj_records
 
 end program ccd_analysis
