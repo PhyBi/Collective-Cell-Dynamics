@@ -51,7 +51,7 @@ contains
         integer :: io_stat, ring, nbeads_per_cell, ncells
         double precision, dimension(size(mx, 1), size(mx, 2)) :: m_norm
         double precision :: gcmx, gcmy ! Global centre of mass
-        real :: poten_real
+        real :: poten_real ! Single precision storage for potential energy
 
         read (traj_fd, asynchronous='no', rec=recnum, iostat=io_stat) &
             timepoint, compressed_fp_for_io, ring_nb_io, poten_real
