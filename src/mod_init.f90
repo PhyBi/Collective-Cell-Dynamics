@@ -173,6 +173,7 @@ contains
 !! This evens out the cell-cell spacings with every iteration. This is Lloyd's algo for CVT.
 !! The alternative MacQueen's algo was not adopted fearing it might take too much time.
 !! Ref: https://people.math.sc.edu/Burkardt/classes/urop_2016/burns.pdf
+        if (m == 1) total_cvt_Lloyd_iters = 0
         write (err_fd, '(a,1x,i0,1x,a)') 'Performing', total_cvt_Lloyd_iters, 'Lloyd Centroidal Voronoi iterations'
         do cvt_Lloyd_iter = 1, total_cvt_Lloyd_iters
             call periodic_voronoi(xcell, ycell, box, centroidal=.true.)
@@ -191,7 +192,11 @@ contains
             dycell(l) = 2*box ! Anything greater than box
             dcell2 = dxcell*dxcell + dycell*dycell
             nearest_neighbor = minloc(dcell2, dim=1)
-            radius = (dsqrt(dcell2(nearest_neighbor)) - rc_rep)/2
+            if (nearest_neighbor /= l) then
+                radius = (dsqrt(dcell2(nearest_neighbor)) - rc_rep)/2
+            else
+                radius = radius_l0
+            end if
             if (radius < minrad) error stop 'Fatal: Initial radius is smaller than minimum stipulated radius, minrad'
 
             call random_number(rands)

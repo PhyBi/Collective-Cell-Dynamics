@@ -49,7 +49,8 @@ contains
             read (fd_nblist, *, iostat=ios) cell_id, nb_cell_id
             if (is_iostat_end(ios)) then
                 exit
-            else if (cell_id > nb_cell_id) then
+            else if (cell_id >= nb_cell_id) then
+                ! = makes sure initialization with small number of cells work where a cell's image may be its neighbor
                 cycle ! Avoids double counting
             else
                 call assert_are_nb_rings(cell_id, nb_cell_id)
