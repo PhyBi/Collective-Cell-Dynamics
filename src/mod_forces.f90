@@ -232,11 +232,11 @@ contains
                                     if (r .lt. rc_rep + (rc_adh - rc_rep)/2) then
                                         factor = k_adh*(r - rc_rep)/r
                                         ! Continuous with 0 repulsion at r = rc_rep
-                                        poten = poten + 0.5d0*k_adh*(r - rc_rep)**2
+                                        poten = poten + 0.5d0*k_adh*(r - rc_rep)**2 - adh_well_depth
                                     else
                                         factor = k_adh*(rc_adh - r)/r
                                         ! Goes to 0 at r = rc_adh
-                                        poten = poten + 0.5d0*k_adh*(rc_adh - r)**2
+                                        poten = poten - 0.5d0*k_adh*(rc_adh - r)**2
                                     end if
 
                                     fadhx = factor*dx

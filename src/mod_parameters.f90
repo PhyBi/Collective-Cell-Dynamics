@@ -41,6 +41,7 @@ module parameters
 
     double precision, protected :: noise_strength = 0.0d0 ! Constant coeff. (rot. diff. related) in noise term
     double precision, protected :: align_strength = 0.0d0 ! Constant coeff. in the Vicsek term
+    double precision, protected :: adh_well_depth ! Well-depth of pairwise adhesion/attraction
     private :: check_params
 
 contains
@@ -61,6 +62,7 @@ contains
 
         if (tau_align /= 0) align_strength = 1.0d0/(tau_align*dt)
         if (tau_noise /= 0) noise_strength = 1.0d0/(tau_noise*dt)
+        adh_well_depth = k_adh*((rc_adh - rc_rep)/2)**2 ! area under the distance vs attraction force curve
 
         if (.not. present(nocheck) .or. .not. nocheck) call check_params() !i.e. checking is the default behavior
         return
