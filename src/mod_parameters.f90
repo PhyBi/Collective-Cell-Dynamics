@@ -8,7 +8,7 @@ module parameters
     double precision, protected :: c = 1.0d0         ! c is coeff. of viscous damping
     double precision, protected :: k = 1.0d0      !  Single cell spring constant
     double precision, protected :: l0 = 0.02d0       !  Single cell natural spring-length
-    double precision, protected :: p = 0.25d0       !  Single cell internal hydrostatic pressure coefficient
+    double precision, protected :: p = 0.125d0       !  Single cell internal hydrostatic pressure coefficient
     double precision, protected :: gamma = -1.d0     ! Line tension. Given dummy -ve value to identify custom choice
     double precision, protected :: rc_adh = 0.06d0  ! Adhesion interaction cut-off
     double precision, protected :: rc_rep = 0.04d0  ! Repulsion interaction cut-off
@@ -164,6 +164,8 @@ contains
         write (err_fd, '(a, 1x, f0.3)') '**Warning: rc_adh/cell_diameter =', rc_adh/(n*l0/pi)
 
         write (err_fd, '(/,a)') 'SPRING CONSTANT AND PRESSURE SCALES:'
+
+        write (err_fd, '(a,1x,f0.3)') 'Effective line tension (gamma - k*l0):', gamma - k*l0
 
         factor = k_rep/(k*k_adh*p) ! Because k_rep works against k, k_adh and p
         write (err_fd, '(a,1x,f0.3,1x,a)') 'k_rep =', factor, 'k*k_adh*p'
